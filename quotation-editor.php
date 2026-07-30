@@ -89,7 +89,7 @@ require __DIR__ . '/includes/header.php';
           <tr>
             <th style="width:30px;"><?= t('sno', $lang) ?></th>
             <th style="min-width:200px;"><?= t('item_description', $lang) ?></th>
-            <th style="min-width:80px;"><?= t('hsn_sac', $lang) ?></th>
+            <th style="min-width:80px;" class="th-tax"><?= t('hsn_sac', $lang) ?></th>
             <th style="min-width:70px;" class="num"><?= t('qty', $lang) ?></th>
             <th style="min-width:70px;"><?= t('unit', $lang) ?></th>
             <th style="min-width:90px;" class="num"><?= t('rate', $lang) ?></th>
@@ -217,7 +217,7 @@ function addRow(prefill) {
   tr.innerHTML = `
     <td>${tbody.children.length + 1}</td>
     <td><input type="text" class="r-name" list="itemNames" value="${prefill?.name ? esc(prefill.name) : ''}" placeholder="<?= t('item_description', $lang) ?>" style="min-width:180px;"></td>
-    <td><input type="text" class="r-hsn" value="${prefill?.hsn ? esc(prefill.hsn) : ''}" style="min-width:70px;"></td>
+    <td class="td-tax"><input type="text" class="r-hsn" value="${prefill?.hsn ? esc(prefill.hsn) : ''}" style="min-width:70px;"></td>
     <td><input type="number" class="r-qty" value="${prefill?.qty || 1}" min="0" step="0.01" style="min-width:60px; text-align:right;"></td>
     <td><input type="text" class="r-unit" value="${prefill?.unit ? esc(prefill.unit) : 'Nos'}" style="min-width:60px;"></td>
     <td><input type="number" class="r-rate" value="${prefill?.rate || 0}" min="0" step="0.01" style="min-width:80px; text-align:right;"></td>

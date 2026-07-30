@@ -17,8 +17,8 @@ $items = $q['items'] ?? [];
         <div class="doc-company-name" data-editable-key="company-name"><?= h($company['name']) ?></div>
         <div class="doc-company-meta" data-editable-key="company-meta">
           <?= h($company['address']) ?><br>
-          <?= t('phone', $lang) ?>: <?= h($company['phone']) ?> &nbsp;•&nbsp; <?= h($company['email']) ?><br>
-          <?= t('gstin', $lang) ?>: <?= h($company['gstin']) ?>
+          <?= t('phone', $lang) ?>: <?= h($company['phone']) ?><br>
+          <?= h($company['email']) ?>
         </div>
       </div>
     </div>
@@ -36,6 +36,12 @@ $items = $q['items'] ?? [];
       <div class="nm" style="font-size:16px; color:var(--bill-primary);"><?= h($q['client_snapshot']['name'] ?? 'Comparative Quotation') ?></div>
     </div>
   </div>
+
+<div class="doc-letter-head">
+  <?php if (!empty($custom_subject)): ?><div class="doc-subject" data-editable-key="subject"><b><?= t('subject', $lang) ?>:</b> <?= h($custom_subject) ?></div><?php endif; ?>
+  <?php if (!empty($custom_salutation)): ?><div class="doc-salutation" data-editable-key="salutation"><?= h($custom_salutation) ?></div><?php endif; ?>
+  <?php if (!empty($custom_body_text)): ?><div class="doc-body-text" data-editable-key="body-text"><?= nl2br(h($custom_body_text)) ?></div><?php endif; ?>
+</div>
 
   <table class="doc-table" style="width:100%; border-collapse:collapse; font-size:11px;" data-editable-key="items-table">
     <thead>
@@ -124,7 +130,12 @@ $items = $q['items'] ?? [];
       IFSC: <?= h($company['bank_ifsc']) ?><br>
       <?= h($company['bank_branch']) ?>
     </div>
-    <?php endif; ?>
+<?php endif; ?>
+<?php if (!empty($company['qr_code']) && $qr_code_enabled): ?>
+    <div class="doc-qr" data-editable-key="qr-code">
+      <img src="<?= h($company['qr_code']) ?>" style="height:70px;">
+    </div>
+<?php endif; ?>
     <div class="doc-sign" data-editable-key="signatory">
       <div><?= t('for', $lang) ?> <?= h($company['name']) ?></div>
       <div class="sign-space"></div>

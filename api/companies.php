@@ -54,6 +54,38 @@ if ($method === 'POST' || $method === 'PUT') {
         json_response(['ok' => true, 'data' => $saved]);
     }
 
+    if ($action === 'qr') {
+        $id = $_POST['id'] ?? '';
+        if (!$id) json_error('Missing company id for QR upload.');
+
+        if (empty($_FILES['qr']) || $_FILES['qr']['error'] !== UPLOAD_ERR_OK) {
+            json_error('No QR file received.');
+        }
+        $allowed = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+        $mime = mime_content_type($_FILES['qr']['tmp_name']);
+        if (!isset($allowed[$mime])) json_error('QR must be PNG, JPG or WEBP.');
+        $ext = $allowed[$mime];
+        $destDir = __DIR__ . '/../assets/img';
+        if (!is_dir($destDir)) mkdir($destDir, 0755, true);
+        $filename = 'qr_' . $id . '.' . $ext;
+        move_uploaded_file($_FILES['qr']['tmp_name'], $destDir . '/' . $filename);
+
+        $saved = null;
+        db_transaction('companies', function ($companies) use ($id, $filename, &$saved) {
+            foreach ($companies as $i => $c) {
+                if ($c['id'] === $id) {
+                    $companies[$i]['qr_code'] = 'assets/img/' . $filename;
+                    $companies[$i]['updated_at'] = date('c');
+                    $saved = $companies[$i];
+                    break;
+                }
+            }
+            return $companies;
+        });
+
+        json_response(['ok' => true, 'data' => $saved]);
+    }
+
     $body = read_json_body_co();
     $name = trim($body['name'] ?? '');
     if ($name === '') {

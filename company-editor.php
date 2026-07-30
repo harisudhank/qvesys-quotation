@@ -87,6 +87,14 @@ require __DIR__ . '/includes/header.php';
     <input type="file" id="co_logo" accept="image/png,image/jpeg,image/webp,image/svg+xml">
   </div>
 
+  <h3 style="margin-top:24px;">QR Code</h3>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <?php if (!empty($existing['qr_code'])): ?>
+      <img src="<?= h($existing['qr_code']) ?>?t=<?= time() ?>" style="height:80px; border:1px solid var(--line); border-radius:6px; padding:4px;">
+    <?php endif; ?>
+    <input type="file" id="co_qr" accept="image/png,image/jpeg,image/webp">
+  </div>
+
   <div style="margin-top:24px; display:flex; gap:12px;">
     <button class="btn btn-primary" onclick="saveCompany()"><?= t('save', $lang) ?></button>
     <a href="company.php" class="btn btn-outline"><?= t('cancel', $lang) ?></a>
@@ -117,12 +125,19 @@ async function saveCompany() {
   const res = await apiCall('api/companies.php', 'POST', payload);
   if (res.ok) {
     const coId = res.data?.id || payload.id;
-    const fileInput = document.getElementById('co_logo');
-    if (fileInput.files.length && coId) {
+    const logoInput = document.getElementById('co_logo');
+    if (logoInput.files.length && coId) {
       const fd = new FormData();
       fd.append('id', coId);
-      fd.append('logo', fileInput.files[0]);
+      fd.append('logo', logoInput.files[0]);
       await fetch('api/companies.php?action=logo', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken() }, body: fd });
+    }
+    const qrInput = document.getElementById('co_qr');
+    if (qrInput.files.length && coId) {
+      const fd = new FormData();
+      fd.append('id', coId);
+      fd.append('qr', qrInput.files[0]);
+      await fetch('api/companies.php?action=qr', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken() }, body: fd });
     }
     showToast('<?= t('saved_successfully', $lang) ?>');
     setTimeout(() => location.href = 'company.php', 500);

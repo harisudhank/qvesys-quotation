@@ -65,11 +65,11 @@ if ($method === 'POST' && $action === 'customize') {
         foreach ($rows as &$q) {
             if ($q['id'] === $id) {
                 if ($customization !== null) {
-                    $q['customization'] = $customization;
+                    $q['customization'] = array_merge($q['customization'] ?? [], $customization);
                 }
                 if ($quotation_fields !== null && is_array($quotation_fields)) {
                     foreach ($quotation_fields as $k => $v) {
-                        if (in_array($k, ['number', 'date', 'valid_until', 'notes', 'terms'], true)) {
+                        if (in_array($k, ['template', 'number', 'date', 'valid_until', 'notes', 'terms'], true)) {
                             $q[$k] = $v;
                         }
                     }
@@ -113,6 +113,39 @@ if ($method === 'POST' && $action === 'logo') {
     });
     if (!$updated) json_error('Quotation not found.', 404);
     json_response(['ok' => true, 'logo' => $logoPath]);
+}
+
+// ---- POST action=qr : upload a per-bill QR code ----
+if ($method === 'POST' && $action === 'qr') {
+    $id = $_GET['id'] ?? '';
+    if (!$id) json_error('Quotation ID required.');
+    if (empty($_FILES['qr']) || $_FILES['qr']['error'] !== UPLOAD_ERR_OK) {
+        json_error('No QR file received.');
+    }
+    $allowed = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+    $mime = mime_content_type($_FILES['qr']['tmp_name']);
+    if (!isset($allowed[$mime])) json_error('QR must be PNG, JPG or WEBP.');
+    $ext = $allowed[$mime];
+    $destDir = __DIR__ . '/../assets/img';
+    if (!is_dir($destDir)) mkdir($destDir, 0755, true);
+    $filename = 'qr_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $id) . '.' . $ext;
+    move_uploaded_file($_FILES['qr']['tmp_name'], $destDir . '/' . $filename);
+    $qrPath = 'assets/img/' . $filename;
+    $tpl = $_POST['template'] ?? 'detailed';
+
+    $updated = false;
+    db_transaction('quotations', function ($rows) use ($id, $qrPath, $tpl, &$updated) {
+        foreach ($rows as &$q) {
+            if ($q['id'] === $id) {
+                if (!is_array($q['customization'])) $q['customization'] = [];
+                $q['customization']['customize_'.$tpl.'_qr_code'] = $qrPath;
+                $updated = true;
+            }
+        }
+        return $rows;
+    });
+    if (!$updated) json_error('Quotation not found.', 404);
+    json_response(['ok' => true, 'qr' => $qrPath]);
 }
 
 // ---- POST action=duplicate : clone as a new draft with a fresh number ----

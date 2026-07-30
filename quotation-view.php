@@ -20,21 +20,38 @@ $settings = db_read('settings');
 // Remember pre-snapshot company defaults for fallback (before snapshot overrides them)
 $defaultCompany = $settings['company'] ?? [];
 
-// Use quotation's company snapshot if available, otherwise fall back to settings
+// Snapshot preserves company details at creation time; current settings take
+// priority for dynamic fields (name, address, phone, email) so edits reflect
+// in existing quotations.
 if (!empty($q['company_snapshot']) && is_array($q['company_snapshot'])) {
     $settings['company'] = array_merge($settings['company'] ?? [], $q['company_snapshot']);
 }
+foreach (['name', 'address', 'phone', 'email'] as $f) {
+    if (!empty($defaultCompany[$f])) {
+        $settings['company'][$f] = $defaultCompany[$f];
+    }
+}
 
-// Always use current company bank details & logo (from companies.json) instead of snapshot,
+// Always use current company details from companies.json instead of snapshot,
 // so that edits in company editor reflect in existing quotations too.
-if (!empty($q['company_id'])) {
+// Match by company_id first, then by snapshot name as fallback.
+$matchId = $q['company_id'] ?? '';
+if (empty($matchId) && !empty($q['company_snapshot']['name'])) {
     foreach (db_read('companies') as $co) {
-        if ($co['id'] === $q['company_id']) {
-            $settings['company']['bank_name'] = $co['bank_name'] ?? '';
-            $settings['company']['bank_account'] = $co['bank_account'] ?? '';
-            $settings['company']['bank_ifsc'] = $co['bank_ifsc'] ?? '';
-            $settings['company']['bank_branch'] = $co['bank_branch'] ?? '';
-            $settings['company']['logo'] = $co['logo'] ?? '';
+        if ($co['name'] === $q['company_snapshot']['name']) {
+            $matchId = $co['id'];
+            break;
+        }
+    }
+}
+if (!empty($matchId)) {
+    foreach (db_read('companies') as $co) {
+        if ($co['id'] === $matchId) {
+            foreach (['name','address','phone','email','gstin','pan','tagline','bank_name','bank_account','bank_ifsc','bank_branch','logo','qr_code'] as $f) {
+                if (!empty($co[$f])) {
+                    $settings['company'][$f] = $co[$f];
+                }
+            }
             break;
         }
     }
@@ -61,9 +78,15 @@ $bill_settings = $q['customization'] ?? [];
 
 if (!function_exists('get_custom_setting')) {
     function get_custom_setting($key, $bill, $global, $default) {
+        global $template;
+        $tpl = $template ?? 'detailed';
+        // Template-specific key takes priority
+        if (isset($_GET[$tpl.'_'.$key])) return $_GET[$tpl.'_'.$key];
         if (isset($_GET[$key])) return $_GET[$key];
-        if (isset($bill['customize_'.$key]) && $bill['customize_'.$key] !== '') return $bill['customize_'.$key];
-        if (isset($global['customize_'.$key]) && $global['customize_'.$key] !== '') return $global['customize_'.$key];
+        $v = $bill['customize_'.$tpl.'_'.$key] ?? null; if ($v !== null && $v !== '' && $v !== '__removed__') return $v;
+        $v = $bill['customize_'.$key] ?? null;         if ($v !== null && $v !== '' && $v !== '__removed__') return $v;
+        $v = $global['customize_'.$tpl.'_'.$key] ?? null; if ($v !== null && $v !== '' && $v !== '__removed__') return $v;
+        $v = $global['customize_'.$key] ?? null;         if ($v !== null && $v !== '' && $v !== '__removed__') return $v;
         return $default;
     }
 }
@@ -76,6 +99,9 @@ $font_size = get_custom_setting('font_size', $bill_settings, $q_settings, '12.3p
 $theme_color = get_custom_setting('theme_color', $bill_settings, $q_settings, '#16223c');
 $accent_color = get_custom_setting('accent_color', $bill_settings, $q_settings, '#B8912F');
 $custom_header_title = get_custom_setting('header_title', $bill_settings, $q_settings, '');
+$custom_subject = get_custom_setting('subject', $bill_settings, $q_settings, 'Quotation for Supply of Goods and Services');
+$custom_salutation = get_custom_setting('salutation', $bill_settings, $q_settings, 'Dear Sir / Madam,');
+$custom_body_text = get_custom_setting('body_text', $bill_settings, $q_settings, "We are pleased to submit our quotation for the above mentioned requirements as follows:\n\nPlease find below our detailed quotation.");
 $custom_footer_content = get_custom_setting('footer_content', $bill_settings, $q_settings, '');
 $theme_preset = get_custom_setting('theme_preset', $bill_settings, $q_settings, 'navy');
 
@@ -97,6 +123,7 @@ $c_logo_width = get_custom_setting('logo_width', $bill_settings, $q_settings, ''
 $c_logo_left = get_custom_setting('logo_left', $bill_settings, $q_settings, '');
 $c_logo_top = get_custom_setting('logo_top', $bill_settings, $q_settings, '');
 $c_element_positions = get_custom_setting('element_positions', $bill_settings, $q_settings, '');
+$c_qr_code = get_custom_setting('qr_code', $bill_settings, $q_settings, '');
 
 if ($c_company_name !== '') $settings['company']['name'] = $c_company_name;
 if ($c_company_tagline !== '') $settings['company']['tagline'] = $c_company_tagline;
@@ -111,6 +138,7 @@ if ($c_bank_account !== '') $settings['company']['bank_account'] = $c_bank_accou
 if ($c_bank_ifsc !== '') $settings['company']['bank_ifsc'] = $c_bank_ifsc;
 if ($c_bank_branch !== '') $settings['company']['bank_branch'] = $c_bank_branch;
 if ($c_logo !== '') $settings['company']['logo'] = $c_logo;
+if ($c_qr_code !== '') $settings['company']['qr_code'] = $c_qr_code;
 
 if (!$bank_enabled) {
     $settings['company']['bank_name'] = '';
@@ -150,6 +178,8 @@ $watermark_text    = get_custom_setting('watermark_text',    $bill_settings, $q_
 $watermark_opacity = get_custom_setting('watermark_opacity', $bill_settings, $q_settings, '0.07');
 $watermark_color   = get_custom_setting('watermark_color',   $bill_settings, $q_settings, '#16223c');
 $watermark_size    = get_custom_setting('watermark_size',    $bill_settings, $q_settings, '60px');
+
+$qr_code_enabled = (int)get_custom_setting('qr_code_enabled', $bill_settings, $q_settings, 1) !== 0;
 
 $templateFile = __DIR__ . "/templates/quote-{$template}.php";
 ?>
@@ -365,6 +395,21 @@ $templateFile = __DIR__ . "/templates/quote-{$template}.php";
 .doc-element-container.selected .delete-btn { opacity: 1; }
 .doc-element-container .delete-btn:hover { background: #c0392b; }
 
+.doc-letter-head {
+  margin: 8px 0;
+  line-height: 1.7;
+}
+.doc-subject {
+  font-size: inherit;
+}
+.doc-salutation {
+  font-size: inherit;
+}
+.doc-body-text {
+  font-size: inherit;
+  white-space: pre-wrap;
+}
+
 .editor-mode-tip {
   position: fixed;
   bottom: 20px;
@@ -433,17 +478,13 @@ body.sidebar-open { padding-right: 400px; }
   <div class="sidebar-panel no-print" id="sidebarPanel">
     <div class="sidebar-header">
       <h3>Quotation Customization & Edit</h3>
+      <button class="btn btn-sm btn-brass" id="saveBtn" onclick="autoSaveCustomization(true)" style="padding:2px 10px; font-size:13px;">Save</button>
       <button class="sidebar-close" onclick="closeSidebar()">&times;</button>
     </div>
     <div class="sidebar-body">
       
-      <div class="scope-toggle">
-        <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-          <input type="radio" name="c_scope" value="local" checked onchange="autoSaveCustomization()"> This Bill Only
-        </label>
-        <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-          <input type="radio" name="c_scope" value="global" onchange="autoSaveCustomization()"> All Bills
-        </label>
+      <div class="scope-toggle" style="display:none;">
+        <input type="radio" name="c_scope" value="local" checked>
       </div>
 
       <!-- SECTION 1: Quotation Details -->
@@ -465,6 +506,18 @@ body.sidebar-open { padding-right: 400px; }
           <div class="field">
             <label>Notes</label>
             <textarea id="q_notes" rows="2" style="width:100%; border:1px solid var(--border-color); border-radius:4px; padding:8px; font-family:inherit;" oninput="autoSaveCustomizationDebounced()"><?= h($q['notes']) ?></textarea>
+          </div>
+          <div class="field">
+            <label>Subject</label>
+            <input type="text" id="c_subject" value="<?= h($custom_subject) ?>" placeholder="e.g. Quotation for Supply of Goods" oninput="autoSaveCustomizationDebounced()">
+          </div>
+          <div class="field">
+            <label>Salutation</label>
+            <input type="text" id="c_salutation" value="<?= h($custom_salutation) ?>" placeholder="e.g. Dear Sir / Madam," oninput="autoSaveCustomizationDebounced()">
+          </div>
+          <div class="field">
+            <label>Body Text</label>
+            <textarea id="c_body_text" rows="2" style="width:100%; border:1px solid var(--border-color); border-radius:4px; padding:8px; font-family:inherit;" oninput="autoSaveCustomizationDebounced()"><?= h($custom_body_text) ?></textarea>
           </div>
           <div class="field">
             <label>Terms & Conditions</label>
@@ -785,12 +838,42 @@ body.sidebar-open { padding-right: 400px; }
         </div>
       </details>
 
+      <!-- SECTION 7: QR Code -->
+      <details style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa;">
+        <summary style="font-weight: bold; cursor: pointer; user-select: none;">QR Code</summary>
+        <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+            <input type="checkbox" id="c_qr_code_enabled" <?= $qr_code_enabled ? 'checked' : '' ?> onchange="autoSaveCustomization()">
+            Show QR Code
+          </label>
+          <div class="field">
+            <label>QR Code Image</label>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <?php
+                $qrSrc = $c_qr_code !== '' ? $c_qr_code : ($settings['company']['qr_code'] ?? '');
+              ?>
+              <?php if (!empty($qrSrc)): ?>
+                <img src="<?= h($qrSrc) ?>?t=<?= time() ?>" style="height:50px; border:1px solid var(--line); border-radius:4px; padding:2px;">
+              <?php endif; ?>
+              <input type="file" id="c_qr" accept="image/png,image/jpeg,image/webp" onchange="uploadBillQr()" style="font-size:12px;">
+              <?php if (!empty($c_qr_code)): ?>
+                <button type="button" class="btn btn-outline btn-sm" onclick="removeBillQr()" style="font-size:11px; padding:2px 8px;">Remove</button>
+              <?php endif; ?>
+            </div>
+            <small style="color:#888; font-size:10px;">Overrides the company QR for this bill only.</small>
+          </div>
+        </div>
+      </details>
+
     </div>
   </div>
 
 <div class="editor-mode-tip no-print" id="editorModeTip">✏️ Click element → drag to move, drag corners to resize (font scales). <b>Ctrl+Z</b> to undo. <b>Edit Layout</b> to exit.</div>
 
 <script>
+const CURRENT_TEMPLATE = '<?= h($template) ?>';
+function tplKey(key) { return CURRENT_TEMPLATE + '_' + key; }
+
 function switchParam(key, val) {
   const url = new URL(window.location.href);
   url.searchParams.set(key, val);
@@ -1191,73 +1274,82 @@ function getVal(id) {
   return val;
 }
 
-async function autoSaveCustomization() {
-  const scope = document.querySelector('input[name="c_scope"]:checked').value;
+async function autoSaveCustomization(showFeedback) {
+  // Helper to build template-specific customization key
+  const t = (key) => 'customize_' + CURRENT_TEMPLATE + '_' + key;
+
   const customization = {
-    customize_header_enabled: document.getElementById('c_header_enabled').checked ? 1 : 0,
-    customize_footer_enabled: document.getElementById('c_footer_enabled').checked ? 1 : 0,
-    customize_bank_enabled: document.getElementById('c_bank_enabled').checked ? 1 : 0,
-    customize_header_title: document.getElementById('c_header_title').value,
-    customize_footer_content: document.getElementById('c_footer_content').value,
-    customize_company_name: getVal('c_company_name'),
-    customize_company_tagline: getVal('c_company_tagline'),
-    customize_company_address: getVal('c_company_address'),
-    customize_company_phone: getVal('c_company_phone'),
-    customize_company_email: getVal('c_company_email'),
-    customize_company_website: getVal('c_company_website'),
-    customize_company_gstin: getVal('c_company_gstin'),
-    customize_company_pan: getVal('c_company_pan'),
-    customize_bank_name: getVal('c_bank_name'),
-    customize_bank_account: getVal('c_bank_account'),
-    customize_bank_ifsc: getVal('c_bank_ifsc'),
-    customize_bank_branch: getVal('c_bank_branch'),
-    customize_signatory: document.getElementById('c_signatory').value,
-    customize_font_family: document.getElementById('c_font_family').value,
-    customize_font_size: document.getElementById('c_font_size').value,
-    customize_theme_preset: document.getElementById('c_theme_preset').value,
-    customize_theme_color: document.getElementById('c_theme_color').value,
-    customize_accent_color: document.getElementById('c_accent_color').value,
-    
+    [t('header_enabled')]: document.getElementById('c_header_enabled').checked ? 1 : 0,
+    [t('footer_enabled')]: document.getElementById('c_footer_enabled').checked ? 1 : 0,
+    [t('bank_enabled')]: document.getElementById('c_bank_enabled').checked ? 1 : 0,
+    [t('header_title')]: document.getElementById('c_header_title').value,
+    [t('subject')]: document.getElementById('c_subject').value,
+    [t('salutation')]: document.getElementById('c_salutation').value,
+    [t('body_text')]: document.getElementById('c_body_text').value,
+    [t('footer_content')]: document.getElementById('c_footer_content').value,
+    [t('company_name')]: getVal('c_company_name'),
+    [t('company_tagline')]: getVal('c_company_tagline'),
+    [t('company_address')]: getVal('c_company_address'),
+    [t('company_phone')]: getVal('c_company_phone'),
+    [t('company_email')]: getVal('c_company_email'),
+    [t('company_website')]: getVal('c_company_website'),
+    [t('company_gstin')]: getVal('c_company_gstin'),
+    [t('company_pan')]: getVal('c_company_pan'),
+    [t('bank_name')]: getVal('c_bank_name'),
+    [t('bank_account')]: getVal('c_bank_account'),
+    [t('bank_ifsc')]: getVal('c_bank_ifsc'),
+    [t('bank_branch')]: getVal('c_bank_branch'),
+    [t('signatory')]: document.getElementById('c_signatory').value,
+    [t('font_family')]: document.getElementById('c_font_family').value,
+    [t('font_size')]: document.getElementById('c_font_size').value,
+    [t('theme_preset')]: document.getElementById('c_theme_preset').value,
+    [t('theme_color')]: document.getElementById('c_theme_color').value,
+    [t('accent_color')]: document.getElementById('c_accent_color').value,
+
     // Column preferences
-    customize_show_col_sno: document.getElementById('c_show_col_sno').checked ? 1 : 0,
-    customize_show_col_desc: document.getElementById('c_show_col_desc').checked ? 1 : 0,
-    customize_show_col_hsn: document.getElementById('c_show_col_hsn').checked ? 1 : 0,
-    customize_show_col_qty: document.getElementById('c_show_col_qty').checked ? 1 : 0,
-    customize_show_col_rate: document.getElementById('c_show_col_rate').checked ? 1 : 0,
-    customize_show_col_discount: document.getElementById('c_show_col_discount').checked ? 1 : 0,
-    customize_show_col_taxable: document.getElementById('c_show_col_taxable').checked ? 1 : 0,
-    customize_show_col_tax_percent: document.getElementById('c_show_col_tax_percent').checked ? 1 : 0,
-    customize_show_col_gst: document.getElementById('c_show_col_gst').checked ? 1 : 0,
-    customize_show_col_amount: document.getElementById('c_show_col_amount').checked ? 1 : 0,
-    
-    customize_lbl_col_sno: document.getElementById('c_lbl_col_sno').value,
-    customize_lbl_col_desc: document.getElementById('c_lbl_col_desc').value,
-    customize_lbl_col_hsn: document.getElementById('c_lbl_col_hsn').value,
-    customize_lbl_col_qty: document.getElementById('c_lbl_col_qty').value,
-    customize_lbl_col_rate: document.getElementById('c_lbl_col_rate').value,
-    customize_lbl_col_discount: document.getElementById('c_lbl_col_discount').value,
-    customize_lbl_col_taxable: document.getElementById('c_lbl_col_taxable').value,
-    customize_lbl_col_tax_percent: document.getElementById('c_lbl_col_tax_percent').value,
-    customize_lbl_col_gst: document.getElementById('c_lbl_col_gst').value,
-    customize_lbl_col_amount: document.getElementById('c_lbl_col_amount').value,
-    
+    [t('show_col_sno')]: document.getElementById('c_show_col_sno').checked ? 1 : 0,
+    [t('show_col_desc')]: document.getElementById('c_show_col_desc').checked ? 1 : 0,
+    [t('show_col_hsn')]: document.getElementById('c_show_col_hsn').checked ? 1 : 0,
+    [t('show_col_qty')]: document.getElementById('c_show_col_qty').checked ? 1 : 0,
+    [t('show_col_rate')]: document.getElementById('c_show_col_rate').checked ? 1 : 0,
+    [t('show_col_discount')]: document.getElementById('c_show_col_discount').checked ? 1 : 0,
+    [t('show_col_taxable')]: document.getElementById('c_show_col_taxable').checked ? 1 : 0,
+    [t('show_col_tax_percent')]: document.getElementById('c_show_col_tax_percent').checked ? 1 : 0,
+    [t('show_col_gst')]: document.getElementById('c_show_col_gst').checked ? 1 : 0,
+    [t('show_col_amount')]: document.getElementById('c_show_col_amount').checked ? 1 : 0,
+
+    [t('lbl_col_sno')]: document.getElementById('c_lbl_col_sno').value,
+    [t('lbl_col_desc')]: document.getElementById('c_lbl_col_desc').value,
+    [t('lbl_col_hsn')]: document.getElementById('c_lbl_col_hsn').value,
+    [t('lbl_col_qty')]: document.getElementById('c_lbl_col_qty').value,
+    [t('lbl_col_rate')]: document.getElementById('c_lbl_col_rate').value,
+    [t('lbl_col_discount')]: document.getElementById('c_lbl_col_discount').value,
+    [t('lbl_col_taxable')]: document.getElementById('c_lbl_col_taxable').value,
+    [t('lbl_col_tax_percent')]: document.getElementById('c_lbl_col_tax_percent').value,
+    [t('lbl_col_gst')]: document.getElementById('c_lbl_col_gst').value,
+    [t('lbl_col_amount')]: document.getElementById('c_lbl_col_amount').value,
+
     // Watermark
-    customize_watermark_enabled: document.getElementById('c_watermark_enabled').checked ? 1 : 0,
-    customize_watermark_text:    document.getElementById('c_watermark_text').value,
-    customize_watermark_color:   document.getElementById('c_watermark_color').value,
-    customize_watermark_opacity: document.getElementById('c_watermark_opacity').value,
-    customize_watermark_size:    document.getElementById('c_watermark_size').value,
+    [t('watermark_enabled')]: document.getElementById('c_watermark_enabled').checked ? 1 : 0,
+    [t('watermark_text')]:    document.getElementById('c_watermark_text').value,
+    [t('watermark_color')]:   document.getElementById('c_watermark_color').value,
+    [t('watermark_opacity')]: document.getElementById('c_watermark_opacity').value,
+    [t('watermark_size')]:    document.getElementById('c_watermark_size').value,
+
+    // QR code
+    [t('qr_code_enabled')]: document.getElementById('c_qr_code_enabled').checked ? 1 : 0,
 
     // Logo position & size
-    customize_logo_width: getVal('c_logo_width'),
-    customize_logo_left: getVal('c_logo_left'),
-    customize_logo_top: getVal('c_logo_top'),
+    [t('logo_width')]: getVal('c_logo_width'),
+    [t('logo_left')]: getVal('c_logo_left'),
+    [t('logo_top')]: getVal('c_logo_top'),
 
     // Element positions (JSON)
-    customize_element_positions: document.getElementById('c_element_positions')?.value || '',
+    [t('element_positions')]: document.getElementById('c_element_positions')?.value || '',
   };
 
   const quotationFields = {
+    template: CURRENT_TEMPLATE,
     number: document.getElementById('q_number').value,
     date: document.getElementById('q_date').value,
     valid_until: document.getElementById('q_valid_until').value,
@@ -1267,42 +1359,26 @@ async function autoSaveCustomization() {
 
   const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
-  if (scope === 'global') {
-    // Save style customizations globally
-    const resSettings = await fetch('api/settings.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-      body: JSON.stringify({ quotation: customization })
-    });
-    if (!resSettings.ok) {
-      alert('Global settings save failed: ' + await resSettings.text());
-      return;
-    }
-
-    // Save quotation fields locally
-    const resQuo = await fetch('api/quotations.php?action=customize&id=<?= h($q['id']) ?>', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-      body: JSON.stringify({ quotation: quotationFields })
-    });
-    if (!resQuo.ok) {
-      alert('Local quotation save failed: ' + await resQuo.text());
-      return;
-    }
-  } else {
-    // Save both style customizations and quotation fields locally
-    const res = await fetch('api/quotations.php?action=customize&id=<?= h($q['id']) ?>', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-      body: JSON.stringify({ customization, quotation: quotationFields })
-    });
-    if (!res.ok) {
-      alert('Save failed: ' + await res.text());
-      return;
-    }
+  // Save both style customizations and quotation fields locally
+  const res = await fetch('api/quotations.php?action=customize&id=<?= h($q['id']) ?>', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ customization, quotation: quotationFields })
+  });
+  if (!res.ok) {
+    alert('Save failed: ' + await res.text());
+    return;
   }
 
   refreshPreview();
+
+  if (showFeedback) {
+    const btn = document.getElementById('saveBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Saved!';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);
+  }
 }
 
 async function uploadBillLogo() {
@@ -1321,22 +1397,40 @@ async function uploadBillLogo() {
 }
 
 async function removeBillLogo() {
-  const scope = document.querySelector('input[name="c_scope"]:checked').value;
   const customization = { customize_logo: '' };
   const csrf = document.querySelector('meta[name="csrf-token"]').content;
-  if (scope === 'global') {
-    await fetch('api/settings.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-      body: JSON.stringify({ quotation: customization })
-    });
-  } else {
-    await fetch('api/quotations.php?action=customize&id=<?= h($q['id']) ?>', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
-      body: JSON.stringify({ customization })
-    });
-  }
+  await fetch('api/quotations.php?action=customize&id=<?= h($q['id']) ?>', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ customization })
+  });
+  refreshPreview();
+}
+
+async function uploadBillQr() {
+  const fileInput = document.getElementById('c_qr');
+  if (!fileInput.files.length) return;
+  const fd = new FormData();
+  fd.append('qr', fileInput.files[0]);
+  fd.append('template', CURRENT_TEMPLATE);
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  const res = await fetch('api/quotations.php?action=qr&id=<?= h($q['id']) ?>', {
+    method: 'POST',
+    headers: { 'X-CSRF-Token': csrf },
+    body: fd
+  });
+  const data = await res.json();
+  if (data.ok) { refreshPreview(); } else { alert(data.error || 'Upload failed'); }
+}
+
+async function removeBillQr() {
+  const customization = { ['customize_' + CURRENT_TEMPLATE + '_qr_code']: '' };
+  const csrf = document.querySelector('meta[name="csrf-token"]').content;
+  await fetch('api/quotations.php?action=customize&id=<?= h($q['id']) ?>', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ customization })
+  });
   refreshPreview();
 }
 

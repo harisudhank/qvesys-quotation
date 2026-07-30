@@ -31,8 +31,8 @@ foreach ($render_groups as $groupName => $grp):
         <div class="doc-company-meta" data-editable-key="company-meta">
           <?php if (!empty($company['tagline'])): ?><?= h($company['tagline']) ?><br><?php endif; ?>
           <?= h($company['address']) ?><br>
-          <?= t('phone', $lang) ?>: <?= h($company['phone']) ?> &nbsp;•&nbsp; <?= t('email', $lang) ?>: <?= h($company['email']) ?><br>
-          <?= t('gstin', $lang) ?>: <?= h($company['gstin']) ?> &nbsp;•&nbsp; <?= t('pan', $lang) ?>: <?= h($company['pan']) ?>
+          <?= t('phone', $lang) ?>: <?= h($company['phone']) ?><br>
+          <?= h($company['email']) ?>
         </div>
       </div>
     </div>
@@ -62,6 +62,12 @@ foreach ($render_groups as $groupName => $grp):
       <div class="ln"><?= h($company['phone']) ?><br><?= h($company['email']) ?></div>
     </div>
   </div>
+
+<div class="doc-letter-head">
+  <?php if (!empty($custom_subject)): ?><div class="doc-subject" data-editable-key="subject"><b><?= t('subject', $lang) ?>:</b> <?= h($custom_subject) ?></div><?php endif; ?>
+  <?php if (!empty($custom_salutation)): ?><div class="doc-salutation" data-editable-key="salutation"><?= h($custom_salutation) ?></div><?php endif; ?>
+  <?php if (!empty($custom_body_text)): ?><div class="doc-body-text" data-editable-key="body-text"><?= nl2br(h($custom_body_text)) ?></div><?php endif; ?>
+</div>
 
   <table class="doc-table" data-editable-key="items-table">
     <thead>
@@ -113,7 +119,12 @@ foreach ($render_groups as $groupName => $grp):
       IFSC: <?= h($company['bank_ifsc']) ?><br>
       <?= h($company['bank_branch']) ?>
     </div>
-    <?php endif; ?>
+<?php endif; ?>
+<?php if (!empty($company['qr_code']) && $qr_code_enabled): ?>
+    <div class="doc-qr" data-editable-key="qr-code">
+      <img src="<?= h($company['qr_code']) ?>" style="height:70px;">
+    </div>
+<?php endif; ?>
     <div class="doc-sign" data-editable-key="signatory">
       <div><?= t('for', $lang) ?> <?= h($company['name']) ?></div>
       <div class="sign-space"></div>
