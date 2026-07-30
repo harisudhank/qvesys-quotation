@@ -17,10 +17,36 @@ if (!$q) {
 }
 $settings = db_read('settings');
 
+// Remember pre-snapshot company defaults for fallback (before snapshot overrides them)
+$defaultCompany = $settings['company'] ?? [];
+
 // Use quotation's company snapshot if available, otherwise fall back to settings
 if (!empty($q['company_snapshot']) && is_array($q['company_snapshot'])) {
     $settings['company'] = array_merge($settings['company'] ?? [], $q['company_snapshot']);
 }
+
+// Always use current company bank details & logo (from companies.json) instead of snapshot,
+// so that edits in company editor reflect in existing quotations too.
+if (!empty($q['company_id'])) {
+    foreach (db_read('companies') as $co) {
+        if ($co['id'] === $q['company_id']) {
+            $settings['company']['bank_name'] = $co['bank_name'] ?? '';
+            $settings['company']['bank_account'] = $co['bank_account'] ?? '';
+            $settings['company']['bank_ifsc'] = $co['bank_ifsc'] ?? '';
+            $settings['company']['bank_branch'] = $co['bank_branch'] ?? '';
+            $settings['company']['logo'] = $co['logo'] ?? '';
+            break;
+        }
+    }
+}
+
+// Fallback: if snapshot cleared these fields but no current company was found,
+// restore the defaults from settings.json so they aren't blank.
+if (empty($settings['company']['logo'])) $settings['company']['logo'] = $defaultCompany['logo'] ?? '';
+if (empty($settings['company']['bank_name'])) $settings['company']['bank_name'] = $defaultCompany['bank_name'] ?? '';
+if (empty($settings['company']['bank_account'])) $settings['company']['bank_account'] = $defaultCompany['bank_account'] ?? '';
+if (empty($settings['company']['bank_ifsc'])) $settings['company']['bank_ifsc'] = $defaultCompany['bank_ifsc'] ?? '';
+if (empty($settings['company']['bank_branch'])) $settings['company']['bank_branch'] = $defaultCompany['bank_branch'] ?? '';
 
 // Preview controls: allow viewing in a different template/language than saved,
 // without altering the saved record (handy for comparing styles before sending).
@@ -67,6 +93,9 @@ $c_bank_ifsc = get_custom_setting('bank_ifsc', $bill_settings, $q_settings, '');
 $c_bank_branch = get_custom_setting('bank_branch', $bill_settings, $q_settings, '');
 $custom_signatory = get_custom_setting('signatory', $bill_settings, $q_settings, '');
 $c_logo = get_custom_setting('logo', $bill_settings, $q_settings, '');
+$c_logo_width = get_custom_setting('logo_width', $bill_settings, $q_settings, '');
+$c_logo_left = get_custom_setting('logo_left', $bill_settings, $q_settings, '');
+$c_logo_top = get_custom_setting('logo_top', $bill_settings, $q_settings, '');
 
 if ($c_company_name !== '') $settings['company']['name'] = $c_company_name;
 if ($c_company_tagline !== '') $settings['company']['tagline'] = $c_company_tagline;
@@ -240,6 +269,43 @@ $templateFile = __DIR__ . "/templates/quote-{$template}.php";
   display: none !important;
 }
 <?php endif; ?>
+/* Interactive Logo Editor */
+.doc-logo-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+.doc-logo-container:hover {
+  outline: 1px dashed var(--bill-accent, #B8912F);
+  outline-offset: 2px;
+}
+.doc-logo-container.selected {
+  outline: 2px dashed var(--bill-accent, #B8912F);
+  outline-offset: 2px;
+  cursor: move;
+}
+.doc-logo-container .resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--bill-accent, #B8912F);
+  border: 1.5px solid #fff;
+  border-radius: 1px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+.doc-logo-container.selected .resize-handle { opacity: 1; }
+.doc-logo-container .resize-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
+.doc-logo-container .resize-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
+.doc-logo-container .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+.doc-logo-container .resize-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
+.doc-logo-container .resize-handle.n  { top: -5px; left: 50%; transform: translateX(-50%); cursor: n-resize; width: 20px; height: 8px; }
+.doc-logo-container .resize-handle.s  { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: s-resize; width: 20px; height: 8px; }
+.doc-logo-container .resize-handle.e  { top: 50%; right: -5px; transform: translateY(-50%); cursor: e-resize; width: 8px; height: 20px; }
+.doc-logo-container .resize-handle.w  { top: 50%; left: -5px; transform: translateY(-50%); cursor: w-resize; width: 8px; height: 20px; }
+
 /* Sidebar Customization */
 body { transition: padding-right 0.3s; }
 body.sidebar-open { padding-right: 400px; }
@@ -372,6 +438,9 @@ body.sidebar-open { padding-right: 400px; }
             </div>
             <small style="color:#888; font-size:10px;">Overrides the global logo for this bill only.</small>
           </div>
+          <input type="hidden" id="c_logo_width" value="<?= h($c_logo_width) ?>" data-default="">
+          <input type="hidden" id="c_logo_left" value="<?= h($c_logo_left) ?>" data-default="">
+          <input type="hidden" id="c_logo_top" value="<?= h($c_logo_top) ?>" data-default="">
         </div>
       </details>
 
@@ -677,6 +746,113 @@ function onColorChange() {
   autoSaveCustomizationDebounced();
 }
 
+// ─── Interactive Logo Editor ─────────────────────────────────────
+let selectedLogo = null;
+let logoDrag = false, logoResize = false;
+let logoDragStart = {}, logoDragOffset = {};
+let logoResizeStart = {}, logoResizeCorner = '';
+
+function initLogoEditor() {
+  document.querySelectorAll('.doc-page .doc-logo').forEach(img => {
+    if (img.parentElement.classList.contains('doc-logo-container')) return;
+    const c = document.createElement('div');
+    c.className = 'doc-logo-container';
+    img.parentNode.insertBefore(c, img);
+    c.appendChild(img);
+    const w = document.getElementById('c_logo_width')?.value;
+    const l = document.getElementById('c_logo_left')?.value;
+    const t = document.getElementById('c_logo_top')?.value;
+    if (w) { img.style.width = w; img.style.height = 'auto'; }
+    if (l) c.style.marginLeft = l;
+    if (t) c.style.marginTop = t;
+    c.addEventListener('click', e => { e.stopPropagation(); selectLogo(c); });
+    c.addEventListener('mousedown', e => {
+      if (c.classList.contains('selected') && !e.target.classList.contains('resize-handle'))
+        startLogoDrag(e, c);
+    });
+  });
+}
+
+function selectLogo(c) {
+  if (selectedLogo === c) return;
+  deselectLogo();
+  selectedLogo = c; c.classList.add('selected');
+  ['nw','ne','se','sw','n','s','e','w'].forEach(p => {
+    const h = document.createElement('div');
+    h.className = 'resize-handle ' + p;
+    h.addEventListener('mousedown', e => { e.stopPropagation(); startLogoResize(e, c, p); });
+    c.appendChild(h);
+  });
+}
+
+function deselectLogo() {
+  if (!selectedLogo) return;
+  selectedLogo.classList.remove('selected');
+  selectedLogo.querySelectorAll('.resize-handle').forEach(h => h.remove());
+  saveLogoSettings();
+  selectedLogo = null;
+}
+
+function startLogoDrag(e, c) {
+  logoDrag = true;
+  logoDragStart = { x: e.clientX, y: e.clientY };
+  logoDragOffset = {
+    l: parseFloat(c.style.marginLeft) || 0,
+    t: parseFloat(c.style.marginTop) || 0
+  };
+}
+
+function startLogoResize(e, c, corner) {
+  logoResize = true; logoResizeCorner = corner;
+  const img = c.querySelector('.doc-logo');
+  logoResizeStart = { x: e.clientX, y: e.clientY, w: img.offsetWidth, h: img.offsetHeight };
+}
+
+document.addEventListener('mousemove', e => {
+  if (logoDrag && selectedLogo) {
+    const dx = e.clientX - logoDragStart.x, dy = e.clientY - logoDragStart.y;
+    selectedLogo.style.marginLeft = (logoDragOffset.l + dx) + 'px';
+    selectedLogo.style.marginTop = (logoDragOffset.t + dy) + 'px';
+  }
+  if (logoResize && selectedLogo) {
+    const dx = e.clientX - logoResizeStart.x, dy = e.clientY - logoResizeStart.y;
+    const img = selectedLogo.querySelector('.doc-logo');
+    const c = logoResizeCorner;
+    let newW = logoResizeStart.w + (c.includes('e') ? dx : c.includes('w') ? -dx : 0);
+    let newH = logoResizeStart.h + (c.includes('s') ? dy : c.includes('n') ? -dy : 0);
+    const a = logoResizeStart.w / logoResizeStart.h;
+    if (Math.abs(dx) > Math.abs(dy)) { newH = newW / a; } else { newW = newH * a; }
+    newW = Math.max(30, Math.min(400, newW));
+    newH = newW / a;
+    img.style.width = newW + 'px';
+    img.style.height = newH + 'px';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (logoDrag || logoResize) updateLogoSettingsInputs();
+  logoDrag = false; logoResize = false;
+});
+
+function updateLogoSettingsInputs() {
+  if (!selectedLogo) return;
+  const img = selectedLogo.querySelector('.doc-logo');
+  const w = document.getElementById('c_logo_width');
+  const l = document.getElementById('c_logo_left');
+  const t = document.getElementById('c_logo_top');
+  if (w) { w.value = img.style.width || ''; w.dispatchEvent(new Event('input', { bubbles: true })); }
+  if (l) { l.value = selectedLogo.style.marginLeft || ''; l.dispatchEvent(new Event('input', { bubbles: true })); }
+  if (t) { t.value = selectedLogo.style.marginTop || ''; t.dispatchEvent(new Event('input', { bubbles: true })); }
+}
+
+function saveLogoSettings() {
+  updateLogoSettingsInputs();
+  autoSaveCustomizationDebounced();
+}
+
+// Init on load
+initLogoEditor();
+
 let autoSaveTimer = null;
 function autoSaveCustomizationDebounced() {
   clearTimeout(autoSaveTimer);
@@ -748,6 +924,11 @@ async function autoSaveCustomization() {
     customize_watermark_color:   document.getElementById('c_watermark_color').value,
     customize_watermark_opacity: document.getElementById('c_watermark_opacity').value,
     customize_watermark_size:    document.getElementById('c_watermark_size').value,
+
+    // Logo position & size
+    customize_logo_width: getVal('c_logo_width'),
+    customize_logo_left: getVal('c_logo_left'),
+    customize_logo_top: getVal('c_logo_top'),
   };
 
   const quotationFields = {
@@ -854,6 +1035,9 @@ async function refreshPreview() {
     if (newStyles.length > 0 && oldStyles.length > 0) {
       oldStyles[0].replaceWith(newStyles[0]);
     }
+
+    // Re-init logo editor after DOM update
+    initLogoEditor();
   } catch (e) {
     console.error('Live preview refresh failed', e);
   }
