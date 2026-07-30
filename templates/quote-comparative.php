@@ -116,6 +116,15 @@ $items = $q['items'] ?? [];
 
   <div class="doc-footer-grid" style="margin-top:24px;">
     <div class="doc-terms"><b><?= t('terms', $lang) ?></b><br><?= h($q['terms']) ?></div>
+    <?php if (!empty($company['bank_name'])): ?>
+    <div class="doc-bank">
+      <b><?= t('bank_details', $lang) ?></b><br>
+      <?= h($company['bank_name']) ?><br>
+      A/C: <?= h($company['bank_account']) ?><br>
+      IFSC: <?= h($company['bank_ifsc']) ?><br>
+      <?= h($company['bank_branch']) ?>
+    </div>
+    <?php endif; ?>
     <div class="doc-sign">
       <div><?= t('for', $lang) ?> <?= h($company['name']) ?></div>
       <div class="sign-space"></div>

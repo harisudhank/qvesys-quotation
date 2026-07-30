@@ -44,6 +44,7 @@ if (!function_exists('get_custom_setting')) {
 
 $header_enabled = (bool)get_custom_setting('header_enabled', $bill_settings, $q_settings, true);
 $footer_enabled = (bool)get_custom_setting('footer_enabled', $bill_settings, $q_settings, true);
+$bank_enabled = (bool)get_custom_setting('bank_enabled', $bill_settings, $q_settings, true);
 $font_family = get_custom_setting('font_family', $bill_settings, $q_settings, 'Inter');
 $font_size = get_custom_setting('font_size', $bill_settings, $q_settings, '12.3px');
 $theme_color = get_custom_setting('theme_color', $bill_settings, $q_settings, '#16223c');
@@ -80,6 +81,10 @@ if ($c_bank_account !== '') $settings['company']['bank_account'] = $c_bank_accou
 if ($c_bank_ifsc !== '') $settings['company']['bank_ifsc'] = $c_bank_ifsc;
 if ($c_bank_branch !== '') $settings['company']['bank_branch'] = $c_bank_branch;
 if ($c_logo !== '') $settings['company']['logo'] = $c_logo;
+
+if (!$bank_enabled) {
+    $settings['company']['bank_name'] = '';
+}
 
 // Column toggles & labels
 $show_col_sno       = (int)get_custom_setting('show_col_sno',       $bill_settings, $q_settings, 1) !== 0;
@@ -374,6 +379,10 @@ body.sidebar-open { padding-right: 400px; }
       <details style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa;">
         <summary style="font-weight: bold; cursor: pointer; user-select: none;">Tax & Bank Overrides</summary>
         <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-weight:600;">
+            <input type="checkbox" id="c_bank_enabled" <?= $bank_enabled ? 'checked' : '' ?> style="width: auto; margin: 0; cursor: pointer;" onchange="autoSaveCustomization()">
+            <?= t('show_bank_details', $lang) ?? 'Show Bank Details' ?>
+          </label>
           <div class="field">
             <label>GSTIN</label>
             <input type="text" id="c_company_gstin" value="<?= h($c_company_gstin !== '' ? $c_company_gstin : ($settings['company']['gstin'] ?? '')) ?>" data-default="<?= h($settings['company']['gstin'] ?? '') ?>" placeholder="Default: <?= h($settings['company']['gstin'] ?? '') ?>" oninput="autoSaveCustomizationDebounced()">
@@ -688,6 +697,7 @@ async function autoSaveCustomization() {
   const customization = {
     customize_header_enabled: document.getElementById('c_header_enabled').checked ? 1 : 0,
     customize_footer_enabled: document.getElementById('c_footer_enabled').checked ? 1 : 0,
+    customize_bank_enabled: document.getElementById('c_bank_enabled').checked ? 1 : 0,
     customize_header_title: document.getElementById('c_header_title').value,
     customize_footer_content: document.getElementById('c_footer_content').value,
     customize_company_name: getVal('c_company_name'),
