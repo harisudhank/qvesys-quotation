@@ -737,8 +737,8 @@
             "customize_signatory": "",
             "customize_font_family": "Inter",
             "customize_font_size": "12.3px",
-            "customize_theme_preset": "navy",
-            "customize_theme_color": "#16223c",
+            "customize_theme_preset": "custom",
+            "customize_theme_color": "#163c28",
             "customize_accent_color": "#b8912f",
             "customize_show_col_sno": 1,
             "customize_show_col_desc": 1,
@@ -765,10 +765,10 @@
             "customize_watermark_color": "#16223c",
             "customize_watermark_opacity": "0.07",
             "customize_watermark_size": "60px",
-            "customize_logo_width": "94px",
+            "customize_logo_width": "129px",
             "customize_logo_left": "",
             "customize_logo_top": "",
-            "customize_element_positions": "{\"company-name\":{\"display\":false},\"company-meta\":{\"display\":false}}"
+            "customize_element_positions": "{\"company-name\":{\"display\":false},\"company-meta\":{\"display\":false},\"doctype\":{\"w\":\"249px\",\"h\":\"64px\",\"l\":\"\",\"t\":\"\",\"display\":true,\"fs\":\"43.5098px\"},\"items-table\":{\"w\":\"706px\",\"h\":\"53px\",\"l\":\"0px\",\"t\":\"0px\",\"display\":true,\"fs\":\"12.9416px\"}}"
         }
     }
 ]

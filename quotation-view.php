@@ -788,7 +788,7 @@ body.sidebar-open { padding-right: 400px; }
     </div>
   </div>
 
-<div class="editor-mode-tip no-print" id="editorModeTip">✏️ Click any element to move or resize it. Press <b>Edit Layout</b> again to exit.</div>
+<div class="editor-mode-tip no-print" id="editorModeTip">✏️ Click element → drag to move, drag corners to resize (font scales). <b>Ctrl+Z</b> to undo. <b>Edit Layout</b> to exit.</div>
 
 <script>
 function switchParam(key, val) {
@@ -941,8 +941,43 @@ loadElementPositions();
 let selectedElement = null;
 let elemDrag = false, elemResize = false;
 let elemDragStart = {}, elemDragOffset = {};
-let elemResizeStart = {}, elemResizeCorner = '';
+let elemResizeStart = {}, elemResizeCorner = '', elemResizeFontSize = 0;
 let editorMode = false;
+let positionHistory = [];
+const MAX_UNDO = 25;
+
+function pushUndoState() {
+  const inp = document.getElementById('c_element_positions');
+  if (!inp) return;
+  positionHistory.push(inp.value);
+  if (positionHistory.length > MAX_UNDO) positionHistory.shift();
+}
+
+function undoLastAction() {
+  if (positionHistory.length === 0) return;
+  const prev = positionHistory.pop();
+  const inp = document.getElementById('c_element_positions');
+  if (!inp) return;
+  inp.value = prev;
+  inp.dispatchEvent(new Event('input', { bubbles: true }));
+  if (selectedElement) { deselectElement(); selectedElement = null; }
+  // Re-wrap DOM and apply saved state
+  document.querySelectorAll('.doc-element-container').forEach(c => {
+    const el = c.querySelector('[data-editable-key]');
+    if (el && !el.parentElement.classList.contains('doc-element-container')) return;
+    c.remove();
+  });
+  initDocElementEditor();
+  loadElementPositions();
+  autoSaveCustomizationDebounced();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'z' && editorMode) {
+    e.preventDefault();
+    undoLastAction();
+  }
+});
 
 function toggleEditorMode() {
   editorMode = !editorMode;
@@ -976,6 +1011,7 @@ function initDocElementEditor() {
       if (saved.l) c.style.marginLeft = saved.l;
       if (saved.t) c.style.marginTop = saved.t;
       if (saved.display !== undefined) el.style.display = saved.display ? '' : 'none';
+      if (saved.fs) el.style.fontSize = saved.fs;
     }
     c.addEventListener('mousedown', e => {
       if (e.target.classList.contains('resize-handle') || e.target.classList.contains('delete-btn')) return;
@@ -1042,6 +1078,7 @@ function hideElement(c) {
 }
 
 function startElemDrag(e, c) {
+  pushUndoState();
   elemDrag = true;
   elemDragStart = { x: e.clientX, y: e.clientY };
   elemDragOffset = {
@@ -1050,9 +1087,17 @@ function startElemDrag(e, c) {
   };
 }
 
+function getBaseFontSize(el) {
+  const cs = getComputedStyle(el);
+  return parseFloat(cs.fontSize) || 12;
+}
+
 function startElemResize(e, c, corner) {
+  pushUndoState();
   elemResize = true; elemResizeCorner = corner;
   elemResizeStart = { x: e.clientX, y: e.clientY, w: c.offsetWidth, h: c.offsetHeight };
+  const inner = c.querySelector('[data-editable-key]');
+  elemResizeFontSize = inner ? getBaseFontSize(inner) : 12;
 }
 
 document.addEventListener('mousemove', e => {
@@ -1070,8 +1115,13 @@ document.addEventListener('mousemove', e => {
     newH = Math.max(24, Math.min(2000, newH));
     selectedElement.style.width = newW + 'px';
     selectedElement.style.height = newH + 'px';
-    selectedElement.querySelector('[data-editable-key]').style.width = '';
-    selectedElement.querySelector('[data-editable-key]').style.height = '';
+    const inner = selectedElement.querySelector('[data-editable-key]');
+    if (inner) {
+      inner.style.width = '';
+      inner.style.height = '';
+      const scale = newW / elemResizeStart.w;
+      inner.style.fontSize = (elemResizeFontSize * scale) + 'px';
+    }
   }
 });
 
@@ -1094,13 +1144,16 @@ function saveElementPosition() {
   const el = selectedElement.querySelector('[data-editable-key]');
   if (!el) return;
   const key = el.dataset.editableKey;
-  setElementPosition(key, {
+  const fs = el.style.fontSize;
+  const data = {
     w: selectedElement.style.width || '',
     h: selectedElement.style.height || '',
     l: selectedElement.style.marginLeft || '',
     t: selectedElement.style.marginTop || '',
     display: true
-  });
+  };
+  if (fs) data.fs = fs;
+  setElementPosition(key, data);
 }
 
 function loadElementPositions() {
@@ -1118,6 +1171,7 @@ function loadElementPositions() {
       if (data.l) c.style.marginLeft = data.l;
       if (data.t) c.style.marginTop = data.t;
       if (data.display === false) el.style.display = 'none';
+      if (data.fs) el.style.fontSize = data.fs;
     });
   } catch(e) {}
 }
