@@ -14,8 +14,8 @@ $items = $q['items'] ?? [];
         <img src="<?= h($company['logo']) ?>" class="doc-logo">
       <?php endif; ?>
       <div>
-        <div class="doc-company-name"><?= h($company['name']) ?></div>
-        <div class="doc-company-meta">
+        <div class="doc-company-name" data-editable-key="company-name"><?= h($company['name']) ?></div>
+        <div class="doc-company-meta" data-editable-key="company-meta">
           <?= h($company['address']) ?><br>
           <?= t('phone', $lang) ?>: <?= h($company['phone']) ?> &nbsp;•&nbsp; <?= h($company['email']) ?><br>
           <?= t('gstin', $lang) ?>: <?= h($company['gstin']) ?>
@@ -23,21 +23,21 @@ $items = $q['items'] ?? [];
       </div>
     </div>
     <div class="doc-title-block">
-      <div class="doc-doctype"><?= t('comparative_quotation', $lang) ?></div>
-      <div class="doc-meta-row"><b><?= t('quotation_no', $lang) ?>:</b> <?= h($q['number']) ?></div>
-      <div class="doc-meta-row"><b><?= t('date', $lang) ?>:</b> <?= h($q['date']) ?></div>
-      <div class="doc-meta-row"><b><?= t('valid_until', $lang) ?>:</b> <?= h($q['valid_until']) ?></div>
+      <div class="doc-doctype" data-editable-key="doctype"><?= t('comparative_quotation', $lang) ?></div>
+      <div class="doc-meta-row" data-editable-key="quotation-no"><b><?= t('quotation_no', $lang) ?>:</b> <?= h($q['number']) ?></div>
+      <div class="doc-meta-row" data-editable-key="date"><b><?= t('date', $lang) ?>:</b> <?= h($q['date']) ?></div>
+      <div class="doc-meta-row" data-editable-key="valid-until"><b><?= t('valid_until', $lang) ?>:</b> <?= h($q['valid_until']) ?></div>
     </div>
   </div>
 
   <div class="doc-parties">
-    <div class="doc-party">
+    <div class="doc-party" data-editable-key="party-to">
       <div class="lbl">Project / Bid Title</div>
       <div class="nm" style="font-size:16px; color:var(--bill-primary);"><?= h($q['client_snapshot']['name'] ?? 'Comparative Quotation') ?></div>
     </div>
   </div>
 
-  <table class="doc-table" style="width:100%; border-collapse:collapse; font-size:11px;">
+  <table class="doc-table" style="width:100%; border-collapse:collapse; font-size:11px;" data-editable-key="items-table">
     <thead>
       <tr>
         <th style="width:28px;"><?= t('sno', $lang) ?></th>
@@ -115,9 +115,9 @@ $items = $q['items'] ?? [];
   </table>
 
   <div class="doc-footer-grid" style="margin-top:24px;">
-    <div class="doc-terms"><b><?= t('terms', $lang) ?></b><br><?= h($q['terms']) ?></div>
+    <div class="doc-terms" data-editable-key="terms"><b><?= t('terms', $lang) ?></b><br><?= h($q['terms']) ?></div>
     <?php if (!empty($company['bank_name'])): ?>
-    <div class="doc-bank">
+    <div class="doc-bank" data-editable-key="bank">
       <b><?= t('bank_details', $lang) ?></b><br>
       <?= h($company['bank_name']) ?><br>
       A/C: <?= h($company['bank_account']) ?><br>
@@ -125,7 +125,7 @@ $items = $q['items'] ?? [];
       <?= h($company['bank_branch']) ?>
     </div>
     <?php endif; ?>
-    <div class="doc-sign">
+    <div class="doc-sign" data-editable-key="signatory">
       <div><?= t('for', $lang) ?> <?= h($company['name']) ?></div>
       <div class="sign-space"></div>
       <div class="line"><?= !empty($custom_signatory) ? h($custom_signatory) : t('authorized_signatory', $lang) ?></div>

@@ -728,10 +728,10 @@
             "customize_company_phone": "",
             "customize_company_email": "",
             "customize_company_website": "",
-            "customize_company_gstin": "www",
+            "customize_company_gstin": "",
             "customize_company_pan": "",
-            "customize_bank_name": "sdsdsd",
-            "customize_bank_account": "jjhhghjgddddddddd",
+            "customize_bank_name": "",
+            "customize_bank_account": "",
             "customize_bank_ifsc": "",
             "customize_bank_branch": "",
             "customize_signatory": "",
@@ -764,7 +764,11 @@
             "customize_watermark_text": "",
             "customize_watermark_color": "#16223c",
             "customize_watermark_opacity": "0.07",
-            "customize_watermark_size": "60px"
+            "customize_watermark_size": "60px",
+            "customize_logo_width": "94px",
+            "customize_logo_left": "",
+            "customize_logo_top": "",
+            "customize_element_positions": ""
         }
     }
 ]

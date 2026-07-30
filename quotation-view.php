@@ -96,6 +96,7 @@ $c_logo = get_custom_setting('logo', $bill_settings, $q_settings, '');
 $c_logo_width = get_custom_setting('logo_width', $bill_settings, $q_settings, '');
 $c_logo_left = get_custom_setting('logo_left', $bill_settings, $q_settings, '');
 $c_logo_top = get_custom_setting('logo_top', $bill_settings, $q_settings, '');
+$c_element_positions = get_custom_setting('element_positions', $bill_settings, $q_settings, '');
 
 if ($c_company_name !== '') $settings['company']['name'] = $c_company_name;
 if ($c_company_tagline !== '') $settings['company']['tagline'] = $c_company_tagline;
@@ -306,6 +307,78 @@ $templateFile = __DIR__ . "/templates/quote-{$template}.php";
 .doc-logo-container .resize-handle.e  { top: 50%; right: -5px; transform: translateY(-50%); cursor: e-resize; width: 8px; height: 20px; }
 .doc-logo-container .resize-handle.w  { top: 50%; left: -5px; transform: translateY(-50%); cursor: w-resize; width: 8px; height: 20px; }
 
+/* Generic Editable Elements */
+.doc-element-container {
+  position: relative;
+  cursor: pointer;
+  min-width: 20px;
+  min-height: 16px;
+}
+.doc-element-container:hover {
+  outline: 1px dashed var(--bill-accent, #B8912F);
+  outline-offset: 1px;
+}
+.doc-element-container.selected {
+  outline: 2px dashed var(--bill-accent, #B8912F);
+  outline-offset: 1px;
+  cursor: move;
+}
+.doc-element-container .resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--bill-accent, #B8912F);
+  border: 1.5px solid #fff;
+  border-radius: 1px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+.doc-element-container.selected .resize-handle { opacity: 1; }
+.doc-element-container .resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+.doc-element-container .resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+.doc-element-container .resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+.doc-element-container .resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+.doc-element-container .resize-handle.n  { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+.doc-element-container .resize-handle.s  { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.doc-element-container .resize-handle.e  { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
+.doc-element-container .resize-handle.w  { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
+.doc-element-container .delete-btn {
+  position: absolute;
+  top: -12px; right: -12px;
+  width: 18px; height: 18px;
+  background: #e74c3c; color: #fff;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  font-size: 12px; line-height: 16px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 11;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.doc-element-container.selected .delete-btn { opacity: 1; }
+
+.editor-mode-tip {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #16223c;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 12px;
+  z-index: 999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.editor-mode-tip.show { opacity: 1; }
+
 /* Sidebar Customization */
 body { transition: padding-right 0.3s; }
 body.sidebar-open { padding-right: 400px; }
@@ -343,6 +416,7 @@ body.sidebar-open { padding-right: 400px; }
         <a href="#" onclick="switchParam('lang','ta');return false;" class="<?= $lang === 'ta' ? 'active' : '' ?>">தமிழ்</a>
       </div>
       <button class="btn btn-outline btn-sm" onclick="openSidebar()">Customize</button>
+      <button class="btn btn-outline btn-sm" onclick="toggleEditorMode()" id="editLayoutBtn">Edit Layout</button>
       <button class="btn btn-brass btn-sm" onclick="window.print()"><?= t('print', $lang) ?></button>
     </div>
   </div>
@@ -441,6 +515,7 @@ body.sidebar-open { padding-right: 400px; }
           <input type="hidden" id="c_logo_width" value="<?= h($c_logo_width) ?>" data-default="">
           <input type="hidden" id="c_logo_left" value="<?= h($c_logo_left) ?>" data-default="">
           <input type="hidden" id="c_logo_top" value="<?= h($c_logo_top) ?>" data-default="">
+          <input type="hidden" id="c_element_positions" value="<?= h($c_element_positions) ?>" data-default="">
         </div>
       </details>
 
@@ -709,6 +784,8 @@ body.sidebar-open { padding-right: 400px; }
     </div>
   </div>
 
+<div class="editor-mode-tip no-print" id="editorModeTip">✏️ Click any element to move or resize it. Press <b>Edit Layout</b> again to exit.</div>
+
 <script>
 function switchParam(key, val) {
   const url = new URL(window.location.href);
@@ -852,6 +929,192 @@ function saveLogoSettings() {
 
 // Init on load
 initLogoEditor();
+initDocElementEditor();
+loadElementPositions();
+
+// ─── Generic Element Editor ─────────────────────────────────────
+let selectedElement = null;
+let elemDrag = false, elemResize = false;
+let elemDragStart = {}, elemDragOffset = {};
+let elemResizeStart = {}, elemResizeCorner = '';
+let editorMode = false;
+
+function toggleEditorMode() {
+  editorMode = !editorMode;
+  document.querySelectorAll('.doc-element-container').forEach(c => {
+    if (!editorMode && c !== selectedElement) {
+      c.classList.remove('selected');
+      c.querySelectorAll('.resize-handle, .delete-btn').forEach(h => h.remove());
+    }
+  });
+  if (!editorMode && selectedElement) {
+    selectedElement.classList.remove('selected');
+    selectedElement.querySelectorAll('.resize-handle, .delete-btn').forEach(h => h.remove());
+    selectedElement = null;
+  }
+  const tip = document.getElementById('editorModeTip');
+  if (tip) tip.classList.toggle('show', editorMode);
+  if (editorMode) initDocElementEditor();
+}
+
+function initDocElementEditor() {
+  document.querySelectorAll('.doc-page [data-editable-key]').forEach(el => {
+    if (el.parentElement.classList.contains('doc-element-container')) return;
+    const c = document.createElement('div');
+    c.className = 'doc-element-container';
+    el.parentNode.insertBefore(c, el);
+    c.appendChild(el);
+    const saved = getElementPosition(el.dataset.editableKey);
+    if (saved) {
+      if (saved.w) el.style.width = saved.w;
+      if (saved.h) el.style.height = saved.h;
+      if (saved.l) c.style.marginLeft = saved.l;
+      if (saved.t) c.style.marginTop = saved.t;
+      if (saved.display !== undefined) el.style.display = saved.display ? '' : 'none';
+    }
+    c.addEventListener('click', e => { e.stopPropagation(); selectElement(c); });
+    c.addEventListener('mousedown', e => {
+      if (c.classList.contains('selected') && !e.target.classList.contains('resize-handle') && !e.target.classList.contains('delete-btn'))
+        startElemDrag(e, c);
+    });
+  });
+}
+
+function getElementPosition(key) {
+  const stored = document.getElementById('c_element_positions')?.value;
+  if (!stored) return null;
+  try { return JSON.parse(stored)[key] || null; } catch(e) { return null; }
+}
+
+function setElementPosition(key, data) {
+  const inp = document.getElementById('c_element_positions');
+  if (!inp) return;
+  let all = {};
+  try { all = JSON.parse(inp.value) || {}; } catch(e) { all = {}; }
+  all[key] = data;
+  inp.value = JSON.stringify(all);
+  inp.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function selectElement(c) {
+  if (!editorMode) return;
+  if (selectedElement === c) return;
+  deselectElement();
+  selectedElement = c; c.classList.add('selected');
+  ['nw','ne','se','sw','n','s','e','w'].forEach(p => {
+    const h = document.createElement('div');
+    h.className = 'resize-handle ' + p;
+    h.addEventListener('mousedown', e => { e.stopPropagation(); startElemResize(e, c, p); });
+    c.appendChild(h);
+  });
+  const db = document.createElement('div');
+  db.className = 'delete-btn';
+  db.textContent = '×';
+  db.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
+  db.addEventListener('click', e => { e.stopPropagation(); hideElement(c); });
+  c.appendChild(db);
+}
+
+function deselectElement() {
+  if (!selectedElement) return;
+  selectedElement.classList.remove('selected');
+  selectedElement.querySelectorAll('.resize-handle, .delete-btn').forEach(h => h.remove());
+  saveElementPosition();
+  selectedElement = null;
+}
+
+function hideElement(c) {
+  if (!c) return;
+  const key = c.querySelector('[data-editable-key]')?.dataset.editableKey;
+  if (!key) return;
+  c.querySelector('[data-editable-key]').style.display = 'none';
+  setElementPosition(key, { display: false });
+  c.classList.remove('selected');
+  c.querySelectorAll('.resize-handle, .delete-btn').forEach(h => h.remove());
+  if (selectedElement === c) selectedElement = null;
+  autoSaveCustomizationDebounced();
+}
+
+function startElemDrag(e, c) {
+  elemDrag = true;
+  elemDragStart = { x: e.clientX, y: e.clientY };
+  elemDragOffset = {
+    l: parseFloat(c.style.marginLeft) || 0,
+    t: parseFloat(c.style.marginTop) || 0
+  };
+}
+
+function startElemResize(e, c, corner) {
+  elemResize = true; elemResizeCorner = corner;
+  const el = c.querySelector('[data-editable-key]');
+  elemResizeStart = { x: e.clientX, y: e.clientY, w: el.offsetWidth, h: el.offsetHeight };
+}
+
+document.addEventListener('mousemove', e => {
+  if (elemDrag && selectedElement) {
+    const dx = e.clientX - elemDragStart.x, dy = e.clientY - elemDragStart.y;
+    selectedElement.style.marginLeft = (elemDragOffset.l + dx) + 'px';
+    selectedElement.style.marginTop = (elemDragOffset.t + dy) + 'px';
+  }
+  if (elemResize && selectedElement) {
+    const dx = e.clientX - elemResizeStart.x, dy = e.clientY - elemResizeStart.y;
+    const el = selectedElement.querySelector('[data-editable-key]');
+    const c = elemResizeCorner;
+    let newW = elemResizeStart.w + (c.includes('e') ? dx : c.includes('w') ? -dx : 0);
+    let newH = elemResizeStart.h + (c.includes('s') ? dy : c.includes('n') ? -dy : 0);
+    newW = Math.max(30, Math.min(800, newW));
+    newH = Math.max(16, Math.min(2000, newH));
+    el.style.width = newW + 'px';
+    el.style.height = newH + 'px';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (elemDrag || elemResize) saveElementPosition();
+  elemDrag = false; elemResize = false;
+});
+
+document.addEventListener('click', e => {
+  if (selectedElement && !e.target.closest('.doc-element-container')) {
+    deselectElement();
+  }
+  if (selectedLogo && !e.target.closest('.doc-logo-container')) {
+    deselectLogo();
+  }
+});
+
+function saveElementPosition() {
+  if (!selectedElement) return;
+  const el = selectedElement.querySelector('[data-editable-key]');
+  if (!el) return;
+  const key = el.dataset.editableKey;
+  setElementPosition(key, {
+    w: el.style.width || '',
+    h: el.style.height || '',
+    l: selectedElement.style.marginLeft || '',
+    t: selectedElement.style.marginTop || '',
+    display: true
+  });
+}
+
+function loadElementPositions() {
+  const stored = document.getElementById('c_element_positions')?.value;
+  if (!stored) return;
+  try {
+    const all = JSON.parse(stored);
+    Object.entries(all).forEach(([key, data]) => {
+      const el = document.querySelector(`[data-editable-key="${key}"]`);
+      if (!el) return;
+      const c = el.parentElement;
+      if (!c.classList.contains('doc-element-container')) return;
+      if (data.w) el.style.width = data.w;
+      if (data.h) el.style.height = data.h;
+      if (data.l) c.style.marginLeft = data.l;
+      if (data.t) c.style.marginTop = data.t;
+      if (data.display === false) el.style.display = 'none';
+    });
+  } catch(e) {}
+}
 
 let autoSaveTimer = null;
 function autoSaveCustomizationDebounced() {
@@ -929,6 +1192,9 @@ async function autoSaveCustomization() {
     customize_logo_width: getVal('c_logo_width'),
     customize_logo_left: getVal('c_logo_left'),
     customize_logo_top: getVal('c_logo_top'),
+
+    // Element positions (JSON)
+    customize_element_positions: document.getElementById('c_element_positions')?.value || '',
   };
 
   const quotationFields = {
@@ -1036,8 +1302,10 @@ async function refreshPreview() {
       oldStyles[0].replaceWith(newStyles[0]);
     }
 
-    // Re-init logo editor after DOM update
+    // Re-init editors after DOM update
     initLogoEditor();
+    initDocElementEditor();
+    loadElementPositions();
   } catch (e) {
     console.error('Live preview refresh failed', e);
   }

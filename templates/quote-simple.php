@@ -20,8 +20,8 @@ foreach ($render_groups as $groupName => $grp):
         <img src="<?= h($company['logo']) ?>" class="doc-logo">
       <?php endif; ?>
       <div>
-        <div class="doc-company-name"><?= h($company['name']) ?></div>
-        <div class="doc-company-meta">
+        <div class="doc-company-name" data-editable-key="company-name"><?= h($company['name']) ?></div>
+        <div class="doc-company-meta" data-editable-key="company-meta">
           <?= h($company['address']) ?><br>
           <?= t('phone', $lang) ?>: <?= h($company['phone']) ?> &nbsp;•&nbsp; <?= h($company['email']) ?><br>
           <?= t('gstin', $lang) ?>: <?= h($company['gstin']) ?>
@@ -29,16 +29,16 @@ foreach ($render_groups as $groupName => $grp):
       </div>
     </div>
     <div class="doc-title-block">
-      <div class="doc-doctype"><?= !empty($custom_header_title) ? h($custom_header_title) : t('quotation', $lang) ?></div>
-      <div class="doc-meta-row"><b><?= t('quotation_no', $lang) ?>:</b> <?= h($q['number']) ?></div>
-      <div class="doc-meta-row"><b><?= t('date', $lang) ?>:</b> <?= h($q['date']) ?></div>
-      <div class="doc-meta-row"><b><?= t('valid_until', $lang) ?>:</b> <?= h($q['valid_until']) ?></div>
+      <div class="doc-doctype" data-editable-key="doctype"><?= !empty($custom_header_title) ? h($custom_header_title) : t('quotation', $lang) ?></div>
+      <div class="doc-meta-row" data-editable-key="quotation-no"><b><?= t('quotation_no', $lang) ?>:</b> <?= h($q['number']) ?></div>
+      <div class="doc-meta-row" data-editable-key="date"><b><?= t('date', $lang) ?>:</b> <?= h($q['date']) ?></div>
+      <div class="doc-meta-row" data-editable-key="valid-until"><b><?= t('valid_until', $lang) ?>:</b> <?= h($q['valid_until']) ?></div>
     </div>
   </div>
 
   <div class="doc-parties">
 
-    <div class="doc-party">
+    <div class="doc-party" data-editable-key="party-to">
       <div class="lbl"><?= t('to', $lang) ?></div>
       <div class="nm"><?= h($clientName) ?></div>
       <div class="ln">
@@ -49,7 +49,7 @@ foreach ($render_groups as $groupName => $grp):
     </div>
   </div>
 
-  <table class="doc-table">
+  <table class="doc-table" data-editable-key="items-table">
     <thead>
       <tr>
         <?php if ($show_col_sno): ?><th style="width:28px;"><?= !empty($lbl_col_sno) ? h($lbl_col_sno) : t('sno', $lang) ?></th><?php endif; ?>
@@ -72,7 +72,7 @@ foreach ($render_groups as $groupName => $grp):
     </tbody>
   </table>
 
-  <div class="doc-totals">
+  <div class="doc-totals" data-editable-key="totals">
     <div class="ln"><span><?= t('subtotal', $lang) ?></span><span><?= format_currency((float)$grp['subtotal']) ?></span></div>
     <?php if ($grp['discount_total'] > 0): ?><div class="ln"><span><?= t('total_discount', $lang) ?></span><span>-<?= format_currency((float)$grp['discount_total']) ?></span></div><?php endif; ?>
     <?php if ($q['is_gst_enabled'] ?? true): ?>
@@ -85,14 +85,14 @@ foreach ($render_groups as $groupName => $grp):
     <?php endif; ?>
     <div class="ln grand"><span><?= t('grand_total', $lang) ?></span><span><?= format_currency((float)$grp['total']) ?></span></div>
   </div>
-  <div class="doc-words"><?= t('in_words', $lang) ?>: <?= h(amount_in_words((float)$grp['total'])) ?></div>
+  <div class="doc-words" data-editable-key="in-words"><?= t('in_words', $lang) ?>: <?= h(amount_in_words((float)$grp['total'])) ?></div>
 
   <div class="doc-footer-grid">
-    <div class="doc-terms">
+    <div class="doc-terms" data-editable-key="terms">
       <b><?= t('terms', $lang) ?></b><br><?= h($q['terms']) ?>
     </div>
     <?php if (!empty($company['bank_name'])): ?>
-    <div class="doc-bank">
+    <div class="doc-bank" data-editable-key="bank">
       <b><?= t('bank_details', $lang) ?></b><br>
       <?= h($company['bank_name']) ?><br>
       A/C: <?= h($company['bank_account']) ?><br>
@@ -100,7 +100,7 @@ foreach ($render_groups as $groupName => $grp):
       <?= h($company['bank_branch']) ?>
     </div>
     <?php endif; ?>
-    <div class="doc-sign">
+    <div class="doc-sign" data-editable-key="signatory">
       <div>For <?= h($company['name']) ?></div>
       <div class="sign-space"></div>
       <div class="line"><?= !empty($custom_signatory) ? h($custom_signatory) : t('authorized_signatory', $lang) ?></div>
@@ -108,10 +108,10 @@ foreach ($render_groups as $groupName => $grp):
   </div>
 
 <?php if (!empty($custom_footer_content)): ?>
-  <div class="doc-thankyou"><?= nl2br(h($custom_footer_content)) ?></div>
+  <div class="doc-thankyou" data-editable-key="thankyou"><?= nl2br(h($custom_footer_content)) ?></div>
 <?php else: ?>
-  <div class="doc-thankyou"><?= t('thank_you', $lang) ?></div>
-  <div class="doc-note"><?= t('this_is_computer_generated', $lang) ?></div>
+  <div class="doc-thankyou" data-editable-key="thankyou"><?= t('thank_you', $lang) ?></div>
+  <div class="doc-note" data-editable-key="note"><?= t('this_is_computer_generated', $lang) ?></div>
 <?php endif; ?>
 </div>
 <?php 
