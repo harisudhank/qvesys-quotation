@@ -313,53 +313,57 @@ $templateFile = __DIR__ . "/templates/quote-{$template}.php";
   cursor: pointer;
   min-width: 20px;
   min-height: 16px;
+  overflow: visible !important;
 }
 .doc-element-container:hover {
   outline: 1px dashed var(--bill-accent, #B8912F);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 .doc-element-container.selected {
   outline: 2px dashed var(--bill-accent, #B8912F);
-  outline-offset: 1px;
+  outline-offset: 2px;
   cursor: move;
 }
 .doc-element-container .resize-handle {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   background: var(--bill-accent, #B8912F);
-  border: 1.5px solid #fff;
-  border-radius: 1px;
-  z-index: 10;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  z-index: 20;
   opacity: 0;
-  transition: opacity 0.15s;
-  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+  transition: opacity 0.12s;
+  box-shadow: 0 0 4px rgba(0,0,0,0.25);
 }
+.doc-element-container:hover .resize-handle { opacity: 0.5; }
 .doc-element-container.selected .resize-handle { opacity: 1; }
-.doc-element-container .resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
-.doc-element-container .resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
-.doc-element-container .resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
-.doc-element-container .resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
-.doc-element-container .resize-handle.n  { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
-.doc-element-container .resize-handle.s  { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
-.doc-element-container .resize-handle.e  { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
-.doc-element-container .resize-handle.w  { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
+.doc-element-container .resize-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+.doc-element-container .resize-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+.doc-element-container .resize-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+.doc-element-container .resize-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+.doc-element-container .resize-handle.n  { top: -6px; left: 50%; transform: translateX(-50%); cursor: n-resize; width: 24px; height: 12px; }
+.doc-element-container .resize-handle.s  { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: s-resize; width: 24px; height: 12px; }
+.doc-element-container .resize-handle.e  { top: 50%; right: -6px; transform: translateY(-50%); cursor: e-resize; width: 12px; height: 24px; }
+.doc-element-container .resize-handle.w  { top: 50%; left: -6px; transform: translateY(-50%); cursor: w-resize; width: 12px; height: 24px; }
 .doc-element-container .delete-btn {
   position: absolute;
-  top: -12px; right: -12px;
-  width: 18px; height: 18px;
+  top: -14px; right: -14px;
+  width: 22px; height: 22px;
   background: #e74c3c; color: #fff;
-  border: 1.5px solid #fff;
+  border: 2px solid #fff;
   border-radius: 50%;
-  font-size: 12px; line-height: 16px;
+  font-size: 14px; line-height: 18px;
   text-align: center;
   cursor: pointer;
-  z-index: 11;
+  z-index: 21;
   opacity: 0;
-  transition: opacity 0.15s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transition: opacity 0.12s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
 }
+.doc-element-container:hover .delete-btn { opacity: 0.5; }
 .doc-element-container.selected .delete-btn { opacity: 1; }
+.doc-element-container .delete-btn:hover { background: #c0392b; }
 
 .editor-mode-tip {
   position: fixed;
@@ -842,10 +846,11 @@ function initLogoEditor() {
     if (w) { img.style.width = w; img.style.height = 'auto'; }
     if (l) c.style.marginLeft = l;
     if (t) c.style.marginTop = t;
-    c.addEventListener('click', e => { e.stopPropagation(); selectLogo(c); });
     c.addEventListener('mousedown', e => {
-      if (c.classList.contains('selected') && !e.target.classList.contains('resize-handle'))
-        startLogoDrag(e, c);
+      if (e.target.classList.contains('resize-handle')) return;
+      e.preventDefault();
+      if (!c.classList.contains('selected')) selectLogo(c);
+      startLogoDrag(e, c);
     });
   });
 }
@@ -954,7 +959,7 @@ function toggleEditorMode() {
   }
   const tip = document.getElementById('editorModeTip');
   if (tip) tip.classList.toggle('show', editorMode);
-  if (editorMode) initDocElementEditor();
+  if (editorMode) { initDocElementEditor(); loadElementPositions(); }
 }
 
 function initDocElementEditor() {
@@ -966,16 +971,17 @@ function initDocElementEditor() {
     c.appendChild(el);
     const saved = getElementPosition(el.dataset.editableKey);
     if (saved) {
-      if (saved.w) el.style.width = saved.w;
-      if (saved.h) el.style.height = saved.h;
+      if (saved.w) c.style.width = saved.w;
+      if (saved.h) c.style.height = saved.h;
       if (saved.l) c.style.marginLeft = saved.l;
       if (saved.t) c.style.marginTop = saved.t;
       if (saved.display !== undefined) el.style.display = saved.display ? '' : 'none';
     }
-    c.addEventListener('click', e => { e.stopPropagation(); selectElement(c); });
     c.addEventListener('mousedown', e => {
-      if (c.classList.contains('selected') && !e.target.classList.contains('resize-handle') && !e.target.classList.contains('delete-btn'))
-        startElemDrag(e, c);
+      if (e.target.classList.contains('resize-handle') || e.target.classList.contains('delete-btn')) return;
+      e.preventDefault();
+      if (!c.classList.contains('selected')) selectElement(c);
+      startElemDrag(e, c);
     });
   });
 }
@@ -1046,8 +1052,7 @@ function startElemDrag(e, c) {
 
 function startElemResize(e, c, corner) {
   elemResize = true; elemResizeCorner = corner;
-  const el = c.querySelector('[data-editable-key]');
-  elemResizeStart = { x: e.clientX, y: e.clientY, w: el.offsetWidth, h: el.offsetHeight };
+  elemResizeStart = { x: e.clientX, y: e.clientY, w: c.offsetWidth, h: c.offsetHeight };
 }
 
 document.addEventListener('mousemove', e => {
@@ -1058,14 +1063,15 @@ document.addEventListener('mousemove', e => {
   }
   if (elemResize && selectedElement) {
     const dx = e.clientX - elemResizeStart.x, dy = e.clientY - elemResizeStart.y;
-    const el = selectedElement.querySelector('[data-editable-key]');
-    const c = elemResizeCorner;
-    let newW = elemResizeStart.w + (c.includes('e') ? dx : c.includes('w') ? -dx : 0);
-    let newH = elemResizeStart.h + (c.includes('s') ? dy : c.includes('n') ? -dy : 0);
-    newW = Math.max(30, Math.min(800, newW));
-    newH = Math.max(16, Math.min(2000, newH));
-    el.style.width = newW + 'px';
-    el.style.height = newH + 'px';
+    const corner = elemResizeCorner;
+    let newW = elemResizeStart.w + (corner.includes('e') ? dx : corner.includes('w') ? -dx : 0);
+    let newH = elemResizeStart.h + (corner.includes('s') ? dy : corner.includes('n') ? -dy : 0);
+    newW = Math.max(50, Math.min(900, newW));
+    newH = Math.max(24, Math.min(2000, newH));
+    selectedElement.style.width = newW + 'px';
+    selectedElement.style.height = newH + 'px';
+    selectedElement.querySelector('[data-editable-key]').style.width = '';
+    selectedElement.querySelector('[data-editable-key]').style.height = '';
   }
 });
 
@@ -1089,8 +1095,8 @@ function saveElementPosition() {
   if (!el) return;
   const key = el.dataset.editableKey;
   setElementPosition(key, {
-    w: el.style.width || '',
-    h: el.style.height || '',
+    w: selectedElement.style.width || '',
+    h: selectedElement.style.height || '',
     l: selectedElement.style.marginLeft || '',
     t: selectedElement.style.marginTop || '',
     display: true
@@ -1107,8 +1113,8 @@ function loadElementPositions() {
       if (!el) return;
       const c = el.parentElement;
       if (!c.classList.contains('doc-element-container')) return;
-      if (data.w) el.style.width = data.w;
-      if (data.h) el.style.height = data.h;
+      if (data.w) c.style.width = data.w;
+      if (data.h) c.style.height = data.h;
       if (data.l) c.style.marginLeft = data.l;
       if (data.t) c.style.marginTop = data.t;
       if (data.display === false) el.style.display = 'none';

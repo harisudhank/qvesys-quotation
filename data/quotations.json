@@ -768,7 +768,7 @@
             "customize_logo_width": "94px",
             "customize_logo_left": "",
             "customize_logo_top": "",
-            "customize_element_positions": ""
+            "customize_element_positions": "{\"company-name\":{\"display\":false},\"company-meta\":{\"display\":false}}"
         }
     }
 ]
