@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="210" viewBox="0 0 640 210" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="640" height="210" rx="10" fill="#ffffff" stroke="#D8D5C9"/>
+  <text x="16" y="28" font-size="14" font-weight="700" fill="#17233F">Clients — import_clients.csv</text>
+  <line x1="0" y1="40" x2="640" y2="40" stroke="#D8D5C9"/>
+  <g font-size="12">
+    <rect x="0" y="40" width="640" height="30" fill="#FBFAF6"/>
+    <text x="10" y="60" font-weight="700" fill="#17233F">name</text>
+    <text x="160" y="60" font-weight="700" fill="#17233F">contact_person</text>
+    <text x="320" y="60" font-weight="700" fill="#17233F">gstin</text>
+    <text x="430" y="60" font-weight="700" fill="#17233F">phone</text>
+    <text x="520" y="60" font-weight="700" fill="#17233F">email</text>
+  </g>
+  <g font-size="12" fill="#333">
+    <text x="10" y="92">Acme Pvt Ltd</text>
+    <text x="160" y="92">Ravi Kumar</text>
+    <text x="320" y="92">33ABCDE1234F1Z5</text>
+    <text x="430" y="92">9876543210</text>
+    <text x="520" y="92">info@acme.com</text>
+  </g>
+  <g font-size="12" fill="#333">
+    <text x="10" y="116">Beta Traders</text>
+    <text x="160" y="116">Suresh</text>
+    <text x="320" y="116">—</text>
+    <text x="430" y="116">9845012345</text>
+    <text x="520" y="116">sales@beta.in</text>
+  </g>
+  <line x1="0" y1="134" x2="640" y2="134" stroke="#D8D5C9"/>
+  <g font-size="11" fill="#6B7280">
+    <text x="10" y="156">Also supported: address, state, state_code</text>
+    <text x="10" y="176">First row must be the column headers (comma separated).</text>
+    <text x="10" y="196" fill="#B8912F" font-weight="700">Required column: name</text>
+  </g>
+</svg>

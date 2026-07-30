@@ -1,0 +1,28 @@
+[
+    {
+        "id": "CL-B0CF06A8",
+        "name": "qvesys",
+        "contact_person": "",
+        "gstin": "765765765",
+        "phone": "8787687687",
+        "email": "hgjhgj@gmail.com",
+        "address": "hgfhgfhsda\nsad\nsasadsadsadsa",
+        "state": "Tamil Nadu",
+        "state_code": "33",
+        "updated_at": "2026-07-14T18:32:12+02:00",
+        "created_at": "2026-07-12T04:25:33+02:00"
+    },
+    {
+        "id": "CL-45E945C1",
+        "name": "The Principal",
+        "contact_person": "-",
+        "gstin": "",
+        "phone": "-",
+        "email": "-",
+        "address": "Govt.Arts College(A)\nkumbakonam",
+        "state": "Tamil Nadu",
+        "state_code": "",
+        "updated_at": "2026-07-30T11:02:46+00:00",
+        "created_at": "2026-07-30T11:02:46+00:00"
+    }
+]

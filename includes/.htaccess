@@ -1,0 +1,4 @@
+# These are PHP includes, not standalone pages — block direct access.
+Require all denied
+Order deny,allow
+Deny from all

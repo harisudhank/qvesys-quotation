@@ -1,0 +1,4 @@
+# Block all direct web access to the JSON data store.
+Require all denied
+Order deny,allow
+Deny from all

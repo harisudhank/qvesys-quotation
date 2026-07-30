@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="210" viewBox="0 0 640 210" font-family="Segoe UI, Arial, sans-serif">
+  <rect x="0" y="0" width="640" height="210" rx="10" fill="#ffffff" stroke="#D8D5C9"/>
+  <text x="16" y="28" font-size="14" font-weight="700" fill="#17233F">Items — import_items.csv</text>
+  <line x1="0" y1="40" x2="640" y2="40" stroke="#D8D5C9"/>
+  <g font-size="12">
+    <rect x="0" y="40" width="640" height="30" fill="#FBFAF6"/>
+    <text x="10" y="60" font-weight="700" fill="#17233F">name</text>
+    <text x="190" y="60" font-weight="700" fill="#17233F">name_ta</text>
+    <text x="330" y="60" font-weight="700" fill="#17233F">hsn</text>
+    <text x="420" y="60" font-weight="700" fill="#17233F">unit</text>
+    <text x="500" y="60" font-weight="700" fill="#17233F">rate</text>
+    <text x="580" y="60" font-weight="700" fill="#17233F">tax %</text>
+  </g>
+  <g font-size="12" fill="#333">
+    <text x="10" y="92">Steel Pipe</text>
+    <text x="190" y="92">ஸ்டீல் பைப்</text>
+    <text x="330" y="92">7306</text>
+    <text x="420" y="92">Nos</text>
+    <text x="500" y="92">1200</text>
+    <text x="580" y="92">18</text>
+  </g>
+  <g font-size="12" fill="#333">
+    <text x="10" y="116">Cement Bag</text>
+    <text x="190" y="116">சிமென்ட் மூட்டை</text>
+    <text x="330" y="116">2523</text>
+    <text x="420" y="116">Bag</text>
+    <text x="500" y="116">380</text>
+    <text x="580" y="116">28</text>
+  </g>
+  <line x1="0" y1="134" x2="640" y2="134" stroke="#D8D5C9"/>
+  <g font-size="11" fill="#6B7280">
+    <text x="10" y="156">name_ta and hsn are optional.</text>
+    <text x="10" y="176">First row must be the column headers (comma separated).</text>
+    <text x="10" y="196" fill="#B8912F" font-weight="700">Required column: name</text>
+  </g>
+</svg>
