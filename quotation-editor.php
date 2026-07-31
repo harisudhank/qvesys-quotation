@@ -40,32 +40,32 @@ require __DIR__ . '/includes/header.php';
       <div class="row">
         <div class="field">
           <label><?= t('client', $lang) ?> *</label>
-          <select id="q_client_id" required>
+          <select id="q_client_id" required data-tip="Choose the client for this quotation">
             <option value=""><?= t('select_client', $lang) ?></option>
             <?php foreach ($clients as $c): ?>
               <option value="<?= h($c['id']) ?>" <?= ($existing['client_id'] ?? '') === $c['id'] ? 'selected' : '' ?>><?= h($c['name']) ?></option>
             <?php endforeach; ?>
           </select>
-          <div class="hint"><a href="clients.php"><?= t('new_client', $lang) ?></a></div>
+          <div class="hint"><a href="clients.php" data-tip="Create a new client"><?= t('new_client', $lang) ?></a></div>
         </div>
         <div class="field">
           <label><?= t('company', $lang) ?> *</label>
-          <select id="q_company_id" required onchange="onCompanyChange()">
+          <select id="q_company_id" required onchange="onCompanyChange()" data-tip="Choose your company for this quotation">
             <option value=""><?= t('select_company', $lang) ?></option>
             <?php foreach ($companies as $co): ?>
               <option value="<?= h($co['id']) ?>" data-state_code="<?= h($co['state_code'] ?? '33') ?>" <?= ($existing['company_id'] ?? '') === $co['id'] ? 'selected' : '' ?>><?= h($co['name']) ?></option>
             <?php endforeach; ?>
           </select>
-          <div class="hint"><a href="company-editor.php"><?= t('add_company', $lang) ?></a></div>
+          <div class="hint"><a href="company-editor.php" data-tip="Add a new company"><?= t('add_company', $lang) ?></a></div>
           <input type="hidden" id="q_company_state_code" value="<?= h($existing['company_snapshot']['state_code'] ?? $settings['company']['state_code'] ?? '33') ?>">
         </div>
         <div class="field">
           <label><?= t('date', $lang) ?></label>
-          <input type="date" id="q_date" value="<?= h($existing['date'] ?? date('Y-m-d')) ?>">
+          <input type="date" id="q_date" value="<?= h($existing['date'] ?? date('Y-m-d')) ?>" data-tip="Quotation date">
         </div>
         <div class="field">
           <label><?= t('valid_until', $lang) ?></label>
-          <input type="date" id="q_valid_until" value="<?= h($existing['valid_until'] ?? date('Y-m-d', strtotime("+{$defaultValidity} days"))) ?>">
+          <input type="date" id="q_valid_until" value="<?= h($existing['valid_until'] ?? date('Y-m-d', strtotime("+{$defaultValidity} days"))) ?>" data-tip="Validity date of this quotation">
         </div>
       </div>
     </div>
@@ -74,13 +74,13 @@ require __DIR__ . '/includes/header.php';
       <div class="card-head" style="flex-wrap:wrap; gap:12px;">
         <h3><?= t('item_description', $lang) ?></h3>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <select id="catalogPick" style="width:180px;">
+          <select id="catalogPick" style="width:180px;" data-tip="Pick a catalog item to add">
             <option value=""><?= t('add_from_catalog', $lang) ?></option>
             <?php foreach ($items as $it): ?>
               <option value='<?= json_encode($it, JSON_HEX_APOS | JSON_HEX_QUOT) ?>'><?= h($it['name']) ?></option>
             <?php endforeach; ?>
           </select>
-          <button type="button" class="btn btn-outline btn-sm" onclick="addRow()"><?= t('add_item', $lang) ?></button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="addRow()" data-tip="Add a new item row"><?= t('add_item', $lang) ?></button>
         </div>
       </div>
       <div style="overflow-x:auto;">
@@ -121,7 +121,7 @@ require __DIR__ . '/includes/header.php';
       <div class="row" style="margin-top:12px;">
         <div class="field">
           <label>Number of Companies</label>
-          <select id="comp_num_companies" onchange="updateComparativeConfigFields()">
+          <select id="comp_num_companies" onchange="updateComparativeConfigFields()" data-tip="How many companies to compare">
             <option value="2" <?= ($existing['comparative_config']['num_companies'] ?? 3) == 2 ? 'selected' : '' ?>>2 Companies</option>
             <option value="3" <?= ($existing['comparative_config']['num_companies'] ?? 3) == 3 ? 'selected' : '' ?>>3 Companies</option>
             <option value="4" <?= ($existing['comparative_config']['num_companies'] ?? 4) == 4 ? 'selected' : '' ?>>4 Companies</option>
@@ -130,7 +130,7 @@ require __DIR__ . '/includes/header.php';
         </div>
         <div class="field">
           <label>Prime Company</label>
-          <select id="comp_prime_company" onchange="recalc()"></select>
+          <select id="comp_prime_company" onchange="recalc()" data-tip="The baseline company used for price comparison"></select>
         </div>
       </div>
 
@@ -150,18 +150,18 @@ require __DIR__ . '/includes/header.php';
     <div class="card card-pad" style="margin-bottom:18px;">
       <label><?= t('language', $lang) ?></label>
       <div class="lang-switch" style="margin-bottom:16px;">
-        <a href="#" data-val="en" class="lang-pick <?= ($existing['language'] ?? $lang) === 'en' ? 'active' : '' ?>">EN</a>
-        <a href="#" data-val="ta" class="lang-pick <?= ($existing['language'] ?? $lang) === 'ta' ? 'active' : '' ?>">தமிழ்</a>
+        <a href="#" data-val="en" class="lang-pick <?= ($existing['language'] ?? $lang) === 'en' ? 'active' : '' ?>" data-tip="English language">EN</a>
+        <a href="#" data-val="ta" class="lang-pick <?= ($existing['language'] ?? $lang) === 'ta' ? 'active' : '' ?>" data-tip="தமிழ் language">தமிழ்</a>
       </div>
       <input type="hidden" id="q_language" value="<?= h($existing['language'] ?? $lang) ?>">
       
       <label><?= t('tax_type', $lang) ?? 'Tax Settings' ?></label>
       <div class="template-pick" style="margin-bottom:16px;">
-        <label>
+        <label data-tip="Include GST columns in the quotation">
           <input type="radio" name="q_is_gst_enabled" value="1" <?= (!isset($existing['is_gst_enabled']) || $existing['is_gst_enabled']) ? 'checked' : '' ?> onchange="toggleGstCols()">
           <span>With GST</span>
         </label>
-        <label>
+        <label data-tip="Hide GST columns in the quotation">
           <input type="radio" name="q_is_gst_enabled" value="0" <?= (isset($existing['is_gst_enabled']) && !$existing['is_gst_enabled']) ? 'checked' : '' ?> onchange="toggleGstCols()">
           <span>Without GST</span>
         </label>
@@ -171,7 +171,7 @@ require __DIR__ . '/includes/header.php';
       <div class="template-pick">
         <?php $tplNames = ['simple' => 'Simple', 'detailed' => 'Detailed', 'gst' => 'GST Itemized', 'premium' => 'Premium']; ?>
         <?php foreach ($tplNames as $key => $label): ?>
-        <label>
+        <label data-tip="Use the <?= $label ?> template">
           <input type="radio" name="q_template" value="<?= $key ?>" <?= ($existing['template'] ?? $defaultTemplate) === $key ? 'checked' : '' ?>>
           <span><?= $label ?></span>
         </label>
@@ -192,8 +192,8 @@ require __DIR__ . '/includes/header.php';
       </div>
     </div>
 
-    <button type="button" class="btn btn-primary btn-block" style="margin-bottom:10px;" onclick="saveQuotation('sent')"><?= t('save', $lang) ?></button>
-    <button type="button" class="btn btn-outline btn-block" onclick="saveQuotation('draft')"><?= t('save_draft', $lang) ?></button>
+    <button type="button" class="btn btn-primary btn-block" style="margin-bottom:10px;" onclick="saveQuotation('sent')" data-tip="Save and mark as sent"><?= t('save', $lang) ?></button>
+    <button type="button" class="btn btn-outline btn-block" onclick="saveQuotation('draft')" data-tip="Save as a draft"><?= t('save_draft', $lang) ?></button>
   </div>
 </div>
 </form>
@@ -216,15 +216,15 @@ function addRow(prefill) {
   const options = ITEM_NAMES.map(n => `<option value="${esc(n)}">`).join('');
   tr.innerHTML = `
     <td>${tbody.children.length + 1}</td>
-    <td><input type="text" class="r-name" list="itemNames" value="${prefill?.name ? esc(prefill.name) : ''}" placeholder="<?= t('item_description', $lang) ?>" style="min-width:180px;"></td>
-    <td class="td-tax"><input type="text" class="r-hsn" value="${prefill?.hsn ? esc(prefill.hsn) : ''}" style="min-width:70px;"></td>
-    <td><input type="number" class="r-qty" value="${prefill?.qty || 1}" min="0" step="0.01" style="min-width:60px; text-align:right;"></td>
-    <td><input type="text" class="r-unit" value="${prefill?.unit ? esc(prefill.unit) : 'Nos'}" style="min-width:60px;"></td>
-    <td><input type="number" class="r-rate" value="${prefill?.rate || 0}" min="0" step="0.01" style="min-width:80px; text-align:right;"></td>
-    <td><input type="number" class="r-disc" value="${prefill?.discount_percent || 0}" min="0" max="100" step="0.01" style="min-width:60px; text-align:right;"></td>
-    <td class="td-tax"><input type="number" class="r-tax" value="${prefill?.tax_percent ?? 18}" min="0" max="28" step="0.01" style="min-width:60px; text-align:right;"></td>
+    <td><input type="text" class="r-name" list="itemNames" value="${prefill?.name ? esc(prefill.name) : ''}" placeholder="<?= t('item_description', $lang) ?>" data-tip="Item description" style="min-width:180px;"></td>
+    <td class="td-tax"><input type="text" class="r-hsn" value="${prefill?.hsn ? esc(prefill.hsn) : ''}" data-tip="HSN/SAC code" style="min-width:70px;"></td>
+    <td><input type="number" class="r-qty" value="${prefill?.qty || 1}" min="0" step="0.01" data-tip="Quantity" style="min-width:60px; text-align:right;"></td>
+    <td><input type="text" class="r-unit" value="${prefill?.unit ? esc(prefill.unit) : 'Nos'}" data-tip="Unit of measure" style="min-width:60px;"></td>
+    <td><input type="number" class="r-rate" value="${prefill?.rate || 0}" min="0" step="0.01" data-tip="Unit rate (₹)" style="min-width:80px; text-align:right;"></td>
+    <td><input type="number" class="r-disc" value="${prefill?.discount_percent || 0}" min="0" max="100" step="0.01" data-tip="Discount percent" style="min-width:60px; text-align:right;"></td>
+    <td class="td-tax"><input type="number" class="r-tax" value="${prefill?.tax_percent ?? 18}" min="0" max="28" step="0.01" data-tip="Tax percent" style="min-width:60px; text-align:right;"></td>
     <td class="num r-amount" style="min-width:80px;">₹0.00</td>
-    <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); recalc();" style="padding:4px 8px;">&times;</button></td>
+    <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); recalc();" data-tip="Remove this item row" style="padding:4px 8px;">&times;</button></td>
   `;
   tbody.appendChild(tr);
   
@@ -509,7 +509,7 @@ function updateComparativeConfigFields() {
     namesHtml += `
       <div class="field">
         <label>Company ${i} Name</label>
-        <select class="comp-name-input" data-idx="${i}" onchange="updatePrimeCompanyOptions(); recalc();">
+        <select class="comp-name-input" data-idx="${i}" onchange="updatePrimeCompanyOptions(); recalc();" data-tip="Choose company ${i} for the comparison">
           <option value="">Select Company ${i}</option>
           ${COMPANIES.map(co => `<option value="${esc(co.name)}" ${val === co.name ? 'selected' : ''}>${esc(co.name)}</option>`).join('')}
           ${val && !COMPANIES.find(co => co.name === val) ? `<option value="${esc(val)}" selected>${esc(val)}</option>` : ''}
@@ -559,7 +559,7 @@ function generateDiffSelectorHtml(label, id, selectedVal) {
   let html = `
     <div class="field">
       <label>${label}</label>
-      <select id="${id}">
+      <select id="${id}" data-tip="${label}">
   `;
   options.forEach(opt => {
     html += `<option value="${opt}" ${parseInt(selectedVal) === opt ? 'selected' : ''}>+${opt}%</option>`;

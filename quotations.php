@@ -21,20 +21,20 @@ usort($quotations, fn($a, $b) => strcmp($b['created_at'] ?? '', $a['created_at']
 
 if ($showComparativeOnly) {
     $quotations = array_filter($quotations, fn($q) => !empty($q['is_comparative']));
-    $topbarAction = '<a href="quotation-editor.php?comparative=1" class="btn btn-brass">+ ' . t('comparative_quotation', $lang) . '</a>';
+    $topbarAction = '<a href="quotation-editor.php?comparative=1" class="btn btn-brass" data-tip="Create a comparative quotation across multiple companies">+ ' . t('comparative_quotation', $lang) . '</a>';
 } else {
     $quotations = array_filter($quotations, fn($q) => empty($q['is_comparative']));
-    $topbarAction = '<a href="quotation-editor.php" class="btn btn-brass">+ ' . t('new_quotation', $lang) . '</a>';
+    $topbarAction = '<a href="quotation-editor.php" class="btn btn-brass" data-tip="Create a new quotation">+ ' . t('new_quotation', $lang) . '</a>';
 }
 require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="toolbar">
   <div class="search-box">
-    <input type="text" id="qSearch" placeholder="<?= t('search', $lang) ?>...">
+    <input type="text" id="qSearch" placeholder="<?= t('search', $lang) ?>..." data-tip="Search quotations by number or client">
   </div>
   <div>
-    <select id="statusFilter" style="width:auto;">
+    <select id="statusFilter" style="width:auto;" data-tip="Filter quotations by status">
       <option value=""><?= t('status', $lang) ?>: <?= t('actions', $lang) === '' ? '' : 'All' ?></option>
       <option value="draft"><?= t('draft', $lang) ?></option>
       <option value="sent"><?= t('sent', $lang) ?></option>
@@ -70,13 +70,13 @@ require __DIR__ . '/includes/header.php';
         <td>
           <?php if (!empty($q['is_comparative'])): ?>
             <details style="cursor:pointer;">
-              <summary style="font-weight:600; outline:none; list-style:none; display:flex; align-items:center; gap:4px; user-select:none;">
+              <summary style="font-weight:600; outline:none; list-style:none; display:flex; align-items:center; gap:4px; user-select:none;" data-tip="Expand to see per-company links">
                 <?= h($q['client_snapshot']['name'] ?? 'Comparative Quotation') ?>
                 <span style="font-size:9px; color:#888;">▼</span>
               </summary>
               <div style="font-size:11px; margin-top:4px; padding-left:8px; border-left:2px solid var(--border-color); display:flex; flex-direction:column; gap:3px;">
                 <?php foreach (array_keys($q['options'] ?? []) as $comp): ?>
-                  <a href="quotation-view.php?id=<?= h($q['id']) ?>&company=<?= urlencode($comp) ?>" style="color:var(--primary-color); font-weight:600; text-decoration:none;">• <?= h($comp) ?></a>
+                  <a href="quotation-view.php?id=<?= h($q['id']) ?>&company=<?= urlencode($comp) ?>" style="color:var(--primary-color); font-weight:600; text-decoration:none;" data-tip="Open <?= h($comp) ?> view">• <?= h($comp) ?></a>
                 <?php endforeach; ?>
               </div>
             </details>
@@ -87,17 +87,17 @@ require __DIR__ . '/includes/header.php';
         <td><?= h($q['date']) ?></td>
         <td class="num"><?= format_currency((float)($q['total'] ?? 0)) ?></td>
         <td>
-          <select class="status-select" data-id="<?= h($q['id']) ?>" style="width:auto; padding:4px 8px; font-size:11.5px;">
+          <select class="status-select" data-id="<?= h($q['id']) ?>" style="width:auto; padding:4px 8px; font-size:11.5px;" data-tip="Change quotation status">
             <?php foreach (['draft', 'sent', 'accepted', 'rejected', 'expired'] as $st): ?>
               <option value="<?= $st ?>" <?= ($q['status'] ?? 'draft') === $st ? 'selected' : '' ?>><?= t($st, $lang) ?></option>
             <?php endforeach; ?>
           </select>
         </td>
         <td style="white-space:nowrap;">
-          <a href="quotation-view.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm"><?= t('view', $lang) ?></a>
-          <a href="quotation-editor.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm"><?= t('edit', $lang) ?></a>
-          <button class="btn btn-outline btn-sm dup-btn" data-id="<?= h($q['id']) ?>"><?= t('duplicate', $lang) ?></button>
-          <button class="btn btn-danger btn-sm del-btn" data-id="<?= h($q['id']) ?>"><?= t('delete', $lang) ?></button>
+          <a href="quotation-view.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm" data-tip="Open this quotation"><?= t('view', $lang) ?></a>
+          <a href="quotation-editor.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm" data-tip="Edit this quotation"><?= t('edit', $lang) ?></a>
+          <button class="btn btn-outline btn-sm dup-btn" data-id="<?= h($q['id']) ?>" data-tip="Create a copy of this quotation"><?= t('duplicate', $lang) ?></button>
+          <button class="btn btn-danger btn-sm del-btn" data-id="<?= h($q['id']) ?>" data-tip="Delete this quotation"><?= t('delete', $lang) ?></button>
         </td>
       </tr>
     <?php endforeach; ?>

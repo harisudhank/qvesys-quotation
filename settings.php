@@ -63,7 +63,7 @@ require __DIR__ . '/includes/header.php';
 
   <!-- SECTION: Company Header Overrides -->
   <details open style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa; margin-bottom:12px;">
-    <summary style="font-weight: bold; cursor: pointer; user-select: none;">Company Header Overrides</summary>
+    <summary style="font-weight: bold; cursor: pointer; user-select: none;" data-tip="Toggle this section">Company Header Overrides</summary>
     <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
       <div class="field">
         <label>Company Name</label>
@@ -99,9 +99,9 @@ require __DIR__ . '/includes/header.php';
           <?php elseif (!empty($company['logo'])): ?>
             <img src="<?= h($company['logo']) ?>?t=<?= time() ?>" style="height:40px; border:1px solid var(--line); border-radius:4px; padding:2px; opacity:0.5;">
           <?php endif; ?>
-          <input type="file" id="c_logo" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="uploadBillLogo()" style="font-size:12px;">
+          <input type="file" id="c_logo" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="uploadBillLogo()" style="font-size:12px;" data-tip="Upload a bill-specific logo">
           <?php if (!empty($quotation['customize_logo'])): ?>
-            <button type="button" class="btn btn-outline btn-sm" onclick="removeBillLogo()" style="font-size:11px; padding:2px 8px;">Remove</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="removeBillLogo()" style="font-size:11px; padding:2px 8px;" data-tip="Remove the bill logo override">Remove</button>
           <?php endif; ?>
         </div>
         <small style="color:#888; font-size:10px;">Overrides the global logo for all bills.</small>
@@ -111,7 +111,7 @@ require __DIR__ . '/includes/header.php';
 
   <!-- SECTION: Tax & Bank Overrides -->
   <details style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa; margin-bottom:12px;">
-    <summary style="font-weight: bold; cursor: pointer; user-select: none;">Tax & Bank Overrides</summary>
+    <summary style="font-weight: bold; cursor: pointer; user-select: none;" data-tip="Toggle this section">Tax & Bank Overrides</summary>
     <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
       <div class="row">
         <div class="field">
@@ -148,7 +148,7 @@ require __DIR__ . '/includes/header.php';
 
   <!-- SECTION: Styling & Toggles -->
   <details style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa; margin-bottom:12px;">
-    <summary style="font-weight: bold; cursor: pointer; user-select: none;">Styling & Toggles</summary>
+    <summary style="font-weight: bold; cursor: pointer; user-select: none;" data-tip="Toggle this section">Styling & Toggles</summary>
     <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
       <div class="field">
         <label>Header Title</label>
@@ -226,7 +226,7 @@ require __DIR__ . '/includes/header.php';
 
   <!-- SECTION: Table Columns -->
   <details style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa; margin-bottom:12px;">
-    <summary style="font-weight: bold; cursor: pointer; user-select: none;">Table Columns</summary>
+    <summary style="font-weight: bold; cursor: pointer; user-select: none;" data-tip="Toggle this section">Table Columns</summary>
     <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
       <?php
       $columns = [
@@ -261,7 +261,7 @@ require __DIR__ . '/includes/header.php';
 
   <!-- SECTION: Clients Table Columns -->
   <details style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa; margin-bottom:12px;">
-    <summary style="font-weight: bold; cursor: pointer; user-select: none;">Clients Table Columns</summary>
+    <summary style="font-weight: bold; cursor: pointer; user-select: none;" data-tip="Toggle this section">Clients Table Columns</summary>
     <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
       <?php
       $clientColumns = [
@@ -294,7 +294,7 @@ require __DIR__ . '/includes/header.php';
 
   <!-- SECTION: Items Table Columns -->
   <details style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa; margin-bottom:12px;">
-    <summary style="font-weight: bold; cursor: pointer; user-select: none;">Items Table Columns</summary>
+    <summary style="font-weight: bold; cursor: pointer; user-select: none;" data-tip="Toggle this section">Items Table Columns</summary>
     <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
       <?php
       $itemColumns = [
@@ -324,7 +324,7 @@ require __DIR__ . '/includes/header.php';
 
   <!-- SECTION: Watermark -->
   <details style="border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: #fafafa;">
-    <summary style="font-weight: bold; cursor: pointer; user-select: none;">Watermark</summary>
+    <summary style="font-weight: bold; cursor: pointer; user-select: none;" data-tip="Toggle this section">Watermark</summary>
     <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
       <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
         <input type="checkbox" id="c_watermark_enabled" <?= ($quotation['customize_watermark_enabled'] ?? 0) ? 'checked' : '' ?> onchange="autoSaveCustomization()">
@@ -381,7 +381,7 @@ require __DIR__ . '/includes/header.php';
       <input type="password" id="p_new">
     </div>
   </div>
-  <button class="btn btn-outline" onclick="saveAccountCredentials()"><?= t('save', $lang) ?></button>
+  <button class="btn btn-outline" onclick="saveAccountCredentials()" data-tip="Save username and password changes"><?= t('save', $lang) ?></button>
 </div>
 
 

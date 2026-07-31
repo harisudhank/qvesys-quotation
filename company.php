@@ -11,24 +11,24 @@ $activeNav = 'company';
 $companies = db_read('companies');
 usort($companies, fn($a, $b) => strcmp($a['name'] ?? '', $b['name'] ?? ''));
 
-$topbarAction = '<a href="company-editor.php" class="btn btn-brass">+ ' . t('add_company', $lang) . '</a>';
+$topbarAction = '<a href="company-editor.php" class="btn btn-brass" data-tip="Add a new company">+ ' . t('add_company', $lang) . '</a>';
 require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="toolbar">
   <div class="search-box">
-    <input type="text" id="coSearch" placeholder="<?= t('search', $lang) ?>...">
+    <input type="text" id="coSearch" placeholder="<?= t('search', $lang) ?>..." data-tip="Search companies by name, GSTIN, email or phone">
   </div>
   <div class="toolbar-actions no-print">
     <div class="dropdown">
-      <button class="btn btn-outline">⬇ <?= t('export', $lang) ?> ▾</button>
+      <button class="btn btn-outline" data-tip="Export companies to a file">⬇ <?= t('export', $lang) ?> ▾</button>
       <div class="dropdown-menu">
-        <a href="export.php?table=companies&type=excel">📊 <?= t('export_excel', $lang) ?></a>
-        <a href="export.php?table=companies&type=word">📝 <?= t('export_word', $lang) ?></a>
-        <a href="export.php?table=companies&type=pdf">📄 <?= t('export_pdf', $lang) ?></a>
+        <a href="export.php?table=companies&type=excel" data-tip="Download as Excel (.xlsx)">📊 <?= t('export_excel', $lang) ?></a>
+        <a href="export.php?table=companies&type=word" data-tip="Download as Word (.docx)">📝 <?= t('export_word', $lang) ?></a>
+        <a href="export.php?table=companies&type=pdf" data-tip="Download as PDF">📄 <?= t('export_pdf', $lang) ?></a>
       </div>
     </div>
-    <button class="btn btn-outline" onclick="openImportModal('companies')">⬆ <?= t('import', $lang) ?></button>
+    <button class="btn btn-outline" onclick="openImportModal('companies')" data-tip="Import companies from a CSV or Excel file">⬆ <?= t('import', $lang) ?></button>
   </div>
 </div>
 
@@ -37,7 +37,7 @@ require __DIR__ . '/includes/header.php';
     <div class="empty-state">
       <div class="glyph">🏢</div>
       <div><?= t('no_records', $lang) ?></div>
-      <a href="company-editor.php" class="btn btn-brass" style="margin-top:14px;">+ <?= t('add_company', $lang) ?></a>
+      <a href="company-editor.php" class="btn btn-brass" style="margin-top:14px;" data-tip="Add a new company">+ <?= t('add_company', $lang) ?></a>
     </div>
   <?php else: ?>
   <table class="grid" id="coTable">
@@ -60,8 +60,8 @@ require __DIR__ . '/includes/header.php';
         <td><?= h($co['email'] ?? '') ?></td>
         <td><?= h($co['state'] ?? '') ?></td>
         <td>
-          <a href="company-editor.php?id=<?= h($co['id']) ?>" class="btn btn-outline btn-sm"><?= t('edit', $lang) ?></a>
-          <button class="btn btn-danger btn-sm" onclick="deleteCompany('<?= h($co['id']) ?>')"><?= t('delete', $lang) ?></button>
+          <a href="company-editor.php?id=<?= h($co['id']) ?>" class="btn btn-outline btn-sm" data-tip="Edit this company"><?= t('edit', $lang) ?></a>
+          <button class="btn btn-danger btn-sm" onclick="deleteCompany('<?= h($co['id']) ?>')" data-tip="Delete this company"><?= t('delete', $lang) ?></button>
         </td>
       </tr>
     <?php endforeach; ?>
@@ -75,7 +75,7 @@ require __DIR__ . '/includes/header.php';
   <div class="modal">
     <div class="modal-head">
       <h3><?= t('import', $lang) ?></h3>
-      <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+      <button class="modal-close" onclick="closeModal('importModal')" data-tip="Close">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="importType">
@@ -85,13 +85,13 @@ require __DIR__ . '/includes/header.php';
       </div>
       <p class="hint"><?= t('import_hint', $lang) ?></p>
       <div class="import-file-row">
-        <input type="file" id="importFile" accept=".csv,.xlsx,.xls,text/csv">
-        <a id="importDownload" class="btn btn-outline btn-sm" href="export.php?table=companies&type=excel&sample=1" download>⤓ <?= t('download_sample', $lang) ?></a>
+        <input type="file" id="importFile" accept=".csv,.xlsx,.xls,text/csv" data-tip="Choose a CSV or Excel file to import">
+        <a id="importDownload" class="btn btn-outline btn-sm" href="export.php?table=companies&type=excel&sample=1" download data-tip="Download a sample template file">⤓ <?= t('download_sample', $lang) ?></a>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeModal('importModal')"><?= t('cancel', $lang) ?></button>
-      <button class="btn btn-primary" onclick="submitImport(document.getElementById('importType').value, 'importFile')"><?= t('import', $lang) ?></button>
+      <button class="btn btn-outline" onclick="closeModal('importModal')" data-tip="Discard and close"><?= t('cancel', $lang) ?></button>
+      <button class="btn btn-primary" onclick="submitImport(document.getElementById('importType').value, 'importFile')" data-tip="Start importing the chosen file"><?= t('import', $lang) ?></button>
     </div>
   </div>
 </div>

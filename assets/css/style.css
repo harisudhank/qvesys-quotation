@@ -320,6 +320,83 @@ table.grid td.num, table.grid th.num { text-align: right; font-variant-numeric: 
 .import-sample .cap { font-size: 11.5px; color: var(--slate); margin-top: 8px; }
 .import-file-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
 
+/* ─── Tooltips ─────────────────────────────────────────────── */
+[data-tip] {
+  position: relative;
+}
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #16223c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1001;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-tip]:hover::before,
+[data-tip]:focus-visible::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #16223c;
+  z-index: 1001;
+  pointer-events: none;
+}
+[data-tip][data-tip-bottom]:hover::after,
+[data-tip][data-tip-bottom]:focus-visible::after {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+[data-tip][data-tip-bottom]:hover::before,
+[data-tip][data-tip-bottom]:focus-visible::before {
+  bottom: auto;
+  top: calc(100% + 3px);
+  border-top-color: transparent;
+  border-bottom-color: #16223c;
+}
+.sidebar [data-tip]::after,
+.sidebar [data-tip]::before,
+.topbar [data-tip]::after,
+.topbar [data-tip]::before {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+.sidebar [data-tip]::before,
+.topbar [data-tip]::before {
+  bottom: auto;
+  top: calc(100% + 3px);
+  border-top-color: transparent;
+  border-bottom-color: #16223c;
+}
+.dropdown-menu a[data-tip]::after,
+.dropdown-menu a[data-tip]::before,
+.modal-content [data-tip]::after,
+.modal-content [data-tip]::before {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+.dropdown-menu a[data-tip]::before,
+.modal-content [data-tip]::before {
+  bottom: auto;
+  top: calc(100% + 3px);
+  border-top-color: transparent;
+  border-bottom-color: #16223c;
+}
+
 @media (max-width: 900px) {
   .stat-grid { grid-template-columns: repeat(2,1fr); }
   .editor-grid { grid-template-columns: 1fr; }

@@ -1,5 +1,71 @@
 /* Shared front-end helpers used across all admin pages */
 
+/* ─── Tooltips ─────────────────────────────────────────────────
+   Auto-attach data-tip to labelled form controls, icon buttons,
+   and common action buttons so every page gets tooltips.
+   Elements that already carry a data-tip attribute are left alone. */
+function initTooltips(root = document) {
+  // 1. Form controls: reuse their <label> text as the tooltip.
+  root.querySelectorAll('input, textarea, select').forEach(el => {
+    if (el.dataset.tip) return;
+    if (el.type === 'hidden' || el.type === 'file' || el.type === 'submit' || el.type === 'button' || el.type === 'reset') return;
+    let lbl = null;
+    if (el.id) {
+      const forLbl = root.querySelector('label[for="' + CSS.escape(el.id) + '"]');
+      if (forLbl) lbl = forLbl;
+    }
+    if (!lbl) lbl = el.closest('label');
+    if (!lbl) lbl = el.parentElement?.querySelector('label');
+    if (!lbl) lbl = el.parentElement?.parentElement?.querySelector('label');
+    const text = (lbl?.textContent || '').trim().replace(/\s+/g, ' ').replace(/\*$/, '').trim();
+    if (text) {
+      el.dataset.tip = text + (el.type === 'checkbox' || el.type === 'radio' ? ' — toggle on/off' : '');
+    }
+  });
+
+  // 2. Buttons / icon-only links: use fallback by class, or title-like text.
+  root.querySelectorAll('button, a').forEach(el => {
+    if (el.dataset.tip) return;
+    const cls = el.className || '';
+    const text = (el.textContent || '').trim().replace(/\s+/g, ' ');
+    if (text && text.length > 1 && text.length < 28 && !/^[×xX&*#+/<>]{1,2}$/.test(text)) {
+      if (/^[🚀⬇⬆📊📝📄⤓🎨✏️🖋➕×]/.test(text) || text === '×' || text === '…') return; // emoji-only / icon
+      const known = {
+        'Back': 'Go back to the previous page',
+        'Cancel': 'Discard changes and close',
+        'Save': 'Save all changes',
+        'Save Draft': 'Save as a draft',
+        'Login': 'Sign in to your account',
+        'Logout': 'Sign out of your account',
+        'Edit': 'Edit this record',
+        'View': 'Open this quotation',
+        'Delete': 'Delete this record',
+        'Duplicate': 'Create a copy of this quotation',
+        'Print': 'Print or save as PDF',
+        'Export Excel': 'Download as Excel (.xlsx)',
+        'Export Word': 'Download as Word (.docx)',
+        'Export PDF': 'Download as PDF',
+        'Import': 'Import records from a file',
+        'Download Sample': 'Download a sample template file',
+        'Add Item': 'Add a new item row',
+        'New Client': 'Create a new client',
+        'Add Company': 'Add a new company',
+      };
+      if (known[text]) { el.dataset.tip = known[text]; return; }
+      if (el.tagName === 'BUTTON') {
+        el.dataset.tip = text;
+        return;
+      }
+      if (cls.includes('btn') && text.length <= 22) {
+        el.dataset.tip = text;
+      }
+    }
+    if (!el.dataset.tip && text === '×') el.dataset.tip = 'Close';
+  });
+}
+initTooltips();
+document.addEventListener('DOMContentLoaded', () => { setTimeout(initTooltips, 50); });
+
 const API_KEY = 'qvesys989403';
 
 function csrfToken() {

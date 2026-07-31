@@ -448,29 +448,82 @@ body.sidebar-open { padding-right: 400px; }
 .sidebar-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
 .scope-toggle { background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; gap: 15px; }
 
+/* Tooltips */
+[data-tip] {
+  position: relative;
+}
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #16223c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1001;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-tip]:hover::before,
+[data-tip]:focus-visible::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #16223c;
+  z-index: 1001;
+  pointer-events: none;
+}
+[data-tip][data-tip-bottom]:hover::after,
+[data-tip][data-tip-bottom]:focus-visible::after {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+[data-tip][data-tip-bottom]:hover::before,
+[data-tip][data-tip-bottom]:focus-visible::before {
+  bottom: auto;
+  top: calc(100% + 3px);
+  border-top-color: transparent;
+  border-bottom-color: #16223c;
+}
+.doc-element-container [data-tip]::after,
+.doc-element-container .resize-handle[data-tip]::after {
+  bottom: calc(100% + 10px);
+}
+
 </style>
 </head>
 <body class="print-preview">
 
   <div class="doc-actions no-print">
     <div style="display:flex; gap:10px; align-items:center;">
-      <a href="quotations.php" class="btn btn-outline btn-sm">&larr; <?= t('quotations', $lang) ?></a>
-      <a href="quotation-editor.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm"><?= t('edit', $lang) ?></a>
+      <a href="quotations.php" class="btn btn-outline btn-sm" data-tip="Back to quotations list">&#8592; <?= t('quotations', $lang) ?></a>
+      <a href="quotation-editor.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm" data-tip="Edit quotation details"><?= t('edit', $lang) ?></a>
       <span class="badge <?= status_badge_class($q['status']) ?>"><?= t($q['status'], $lang) ?></span>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
-      <select onchange="switchParam('template', this.value)" style="width:auto;">
+      <select onchange="switchParam('template', this.value)" style="width:auto;" data-tip="Choose template">
         <?php foreach (['simple' => 'Simple', 'detailed' => 'Detailed', 'gst' => 'GST Itemized', 'premium' => 'Premium'] as $k => $lbl): ?>
           <option value="<?= $k ?>" <?= $template === $k ? 'selected' : '' ?>><?= $lbl ?></option>
         <?php endforeach; ?>
       </select>
       <div class="lang-switch">
-        <a href="#" onclick="switchParam('lang','en');return false;" class="<?= $lang === 'en' ? 'active' : '' ?>">EN</a>
-        <a href="#" onclick="switchParam('lang','ta');return false;" class="<?= $lang === 'ta' ? 'active' : '' ?>">தமிழ்</a>
+        <a href="#" onclick="switchParam('lang','en');return false;" class="<?= $lang === 'en' ? 'active' : '' ?>" data-tip="Switch to English">EN</a>
+        <a href="#" onclick="switchParam('lang','ta');return false;" class="<?= $lang === 'ta' ? 'active' : '' ?>" data-tip="Switch to Tamil">தமிழ்</a>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="openSidebar()">Customize</button>
-      <button class="btn btn-outline btn-sm" onclick="toggleEditorMode()" id="editLayoutBtn">Edit Layout</button>
-      <button class="btn btn-brass btn-sm" onclick="window.print()"><?= t('print', $lang) ?></button>
+      <button class="btn btn-outline btn-sm" onclick="openSidebar()" data-tip="Open customization panel">Customize</button>
+      <button class="btn btn-outline btn-sm" onclick="toggleEditorMode()" id="editLayoutBtn" data-tip="Toggle layout editor (drag / resize / hide elements)">Edit Layout</button>
+      <button class="btn btn-brass btn-sm" onclick="window.print()" data-tip="Print or save as PDF"><?= t('print', $lang) ?></button>
     </div>
   </div>
 
@@ -482,8 +535,8 @@ body.sidebar-open { padding-right: 400px; }
   <div class="sidebar-panel no-print" id="sidebarPanel">
     <div class="sidebar-header">
       <h3>Quotation Customization & Edit</h3>
-      <button class="btn btn-sm btn-brass" id="saveBtn" onclick="autoSaveCustomization(true)" style="padding:2px 10px; font-size:13px;">Save</button>
-      <button class="sidebar-close" onclick="closeSidebar()">&times;</button>
+      <button class="btn btn-sm btn-brass" id="saveBtn" onclick="autoSaveCustomization(true)" style="padding:2px 10px; font-size:13px;" data-tip="Save all changes">Save</button>
+      <button class="sidebar-close" onclick="closeSidebar()" data-tip="Close panel">&times;</button>
     </div>
     <div class="sidebar-body">
       
@@ -568,7 +621,7 @@ body.sidebar-open { padding-right: 400px; }
               <?php endif; ?>
               <input type="file" id="c_logo" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="uploadBillLogo()" style="font-size:12px;">
               <?php if (!empty($c_logo)): ?>
-                <button type="button" class="btn btn-outline btn-sm" onclick="removeBillLogo()" style="font-size:11px; padding:2px 8px;">Remove</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="removeBillLogo()" style="font-size:11px; padding:2px 8px;" data-tip="Remove bill-specific logo override">Remove</button>
               <?php endif; ?>
             </div>
             <small style="color:#888; font-size:10px;">Overrides the global logo for this bill only.</small>
@@ -861,7 +914,7 @@ body.sidebar-open { padding-right: 400px; }
               <?php endif; ?>
               <input type="file" id="c_qr" accept="image/png,image/jpeg,image/webp" onchange="uploadBillQr()" style="font-size:12px;">
               <?php if (!empty($c_qr_code)): ?>
-                <button type="button" class="btn btn-outline btn-sm" onclick="removeBillQr()" style="font-size:11px; padding:2px 8px;">Remove</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="removeBillQr()" style="font-size:11px; padding:2px 8px;" data-tip="Remove bill-specific QR override">Remove</button>
               <?php endif; ?>
             </div>
             <small style="color:#888; font-size:10px;">Overrides the company QR for this bill only.</small>
@@ -925,6 +978,7 @@ function initLogoEditor() {
     if (img.parentElement.classList.contains('doc-logo-container')) return;
     const c = document.createElement('div');
     c.className = 'doc-logo-container';
+    c.dataset.tip = 'Company logo — drag to move';
     img.parentNode.insertBefore(c, img);
     c.appendChild(img);
     const w = document.getElementById('c_logo_width')?.value;
@@ -949,6 +1003,7 @@ function selectLogo(c) {
   ['nw','ne','se','sw','n','s','e','w'].forEach(p => {
     const h = document.createElement('div');
     h.className = 'resize-handle ' + p;
+    h.dataset.tip = handleTip(p);
     h.addEventListener('mousedown', e => { e.stopPropagation(); startLogoResize(e, c, p); });
     c.appendChild(h);
   });
@@ -1019,11 +1074,6 @@ function saveLogoSettings() {
   autoSaveCustomizationDebounced();
 }
 
-// Init on load
-initLogoEditor();
-initDocElementEditor();
-loadElementPositions();
-
 // ─── Generic Element Editor ─────────────────────────────────────
 let selectedElement = null;
 let elemDrag = false, elemResize = false;
@@ -1032,6 +1082,37 @@ let elemResizeStart = {}, elemResizeCorner = '', elemResizeFontSize = 0;
 let editorMode = false;
 let positionHistory = [];
 const MAX_UNDO = 25;
+
+const ELEMENT_TIPS = {
+  'company-name': 'Company name — drag to move',
+  'company-meta': 'Company tagline / address / phone / email',
+  'company-gstin-phone': 'GSTIN / PAN / Phone / Email',
+  'doctype': 'Document title',
+  'quotation-no': 'Quotation number',
+  'date': 'Date',
+  'valid-until': 'Valid until',
+  'party-to': 'Bill To (client details)',
+  'subject': 'Subject line',
+  'salutation': 'Salutation',
+  'body-text': 'Body text',
+  'items-table': 'Items table',
+  'totals': 'Totals summary',
+  'in-words': 'Amount in words',
+  'terms': 'Terms & conditions',
+  'bank': 'Bank details',
+  'qr-code': 'QR code',
+  'signatory': 'Authorized signatory',
+  'thankyou': 'Thank-you note'
+};
+
+function elemTip(key) {
+  return ELEMENT_TIPS[key] || ('Element: ' + key + ' — drag to move');
+}
+
+function handleTip(corner) {
+  const map = { nw: 'Resize (top-left)', ne: 'Resize (top-right)', sw: 'Resize (bottom-left)', se: 'Resize (bottom-right)', n: 'Resize taller', s: 'Resize shorter', e: 'Resize wider', w: 'Resize narrower' };
+  return map[corner] || 'Resize';
+}
 
 function pushUndoState() {
   const inp = document.getElementById('c_element_positions');
@@ -1045,15 +1126,18 @@ function undoLastAction() {
   const prev = positionHistory.pop();
   const inp = document.getElementById('c_element_positions');
   if (!inp) return;
-  inp.value = prev;
-  inp.dispatchEvent(new Event('input', { bubbles: true }));
-  if (selectedElement) { deselectElement(); selectedElement = null; }
-  // Re-wrap DOM and apply saved state
+  if (selectedElement) {
+    selectedElement.classList.remove('selected');
+    selectedElement.querySelectorAll('.resize-handle, .delete-btn').forEach(h => h.remove());
+    selectedElement = null;
+  }
+  // Unwrap containers, preserving the inner editable elements
   document.querySelectorAll('.doc-element-container').forEach(c => {
     const el = c.querySelector('[data-editable-key]');
-    if (el && !el.parentElement.classList.contains('doc-element-container')) return;
+    if (el) c.parentNode.insertBefore(el, c);
     c.remove();
   });
+  inp.value = prev;
   initDocElementEditor();
   loadElementPositions();
   autoSaveCustomizationDebounced();
@@ -1089,6 +1173,7 @@ function initDocElementEditor() {
     if (el.parentElement.classList.contains('doc-element-container')) return;
     const c = document.createElement('div');
     c.className = 'doc-element-container';
+    c.dataset.tip = elemTip(el.dataset.editableKey);
     el.parentNode.insertBefore(c, el);
     c.appendChild(el);
     const saved = getElementPosition(el.dataset.editableKey);
@@ -1133,12 +1218,14 @@ function selectElement(c) {
   ['nw','ne','se','sw','n','s','e','w'].forEach(p => {
     const h = document.createElement('div');
     h.className = 'resize-handle ' + p;
+    h.dataset.tip = handleTip(p);
     h.addEventListener('mousedown', e => { e.stopPropagation(); startElemResize(e, c, p); });
     c.appendChild(h);
   });
   const db = document.createElement('div');
   db.className = 'delete-btn';
   db.textContent = '×';
+  db.dataset.tip = 'Hide element (Ctrl+Z to undo)';
   db.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
   db.addEventListener('click', e => { e.stopPropagation(); hideElement(c); });
   c.appendChild(db);
@@ -1473,6 +1560,24 @@ async function refreshPreview() {
 if (window.location.search.includes('sidebar=1')) {
   openSidebar();
 }
+
+// Auto tooltips for sidebar controls: derive from their <label> text
+function initSidebarTooltips() {
+  document.querySelectorAll('#sidebarPanel input, #sidebarPanel textarea, #sidebarPanel select').forEach(ctl => {
+    if (ctl.dataset.tip || ctl.type === 'hidden' || ctl.type === 'file') return;
+    let lbl = ctl.closest('label');
+    if (!lbl) lbl = ctl.parentElement?.querySelector('label');
+    if (!lbl) lbl = ctl.parentElement?.parentElement?.querySelector('label');
+    const text = (lbl?.textContent || '').trim().replace(/\s+/g, ' ');
+    if (text) ctl.dataset.tip = text + (ctl.type === 'checkbox' ? ' — toggle on/off' : '');
+  });
+}
+initSidebarTooltips();
+
+// Init on load
+initLogoEditor();
+initDocElementEditor();
+loadElementPositions();
 </script>
 </body>
 </html>

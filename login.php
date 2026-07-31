@@ -59,25 +59,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form method="post" id="loginForm" novalidate>
       <div class="field">
         <label><?= t('username', $lang) ?></label>
-        <input type="text" name="username" id="username" autocomplete="username" autofocus>
+        <input type="text" name="username" id="username" autocomplete="username" autofocus data-tip="<?= t('username', $lang) ?>">
         <div class="field-error-msg" id="usernameError" style="display:none; color:#B4453A; font-size:12px; margin-top:5px;">
           <?= $lang === 'ta' ? 'பயனர் பெயர் தேவை.' : 'Username is required.' ?>
         </div>
       </div>
       <div class="field">
         <label><?= t('password', $lang) ?></label>
-        <input type="password" name="password" id="password" autocomplete="current-password">
+        <input type="password" name="password" id="password" autocomplete="current-password" data-tip="<?= t('password', $lang) ?>">
         <div class="field-error-msg" id="passwordError" style="display:none; color:#B4453A; font-size:12px; margin-top:5px;">
           <?= $lang === 'ta' ? 'கடவுச்சொல் தேவை.' : 'Password is required.' ?>
         </div>
       </div>
-      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn" data-tip="Sign in to your account">
         <?= t('login', $lang) ?>
       </button>
     </form>
     <div style="text-align:center; margin-top:16px;">
-      <a href="?lang=en" class="login-lang-link <?= $lang === 'en' ? 'active' : '' ?>">EN</a>
-      <a href="?lang=ta" class="login-lang-link <?= $lang === 'ta' ? 'active' : '' ?>">தமிழ்</a>
+      <a href="?lang=en" class="login-lang-link <?= $lang === 'en' ? 'active' : '' ?>" data-tip="Switch to English">EN</a>
+      <a href="?lang=ta" class="login-lang-link <?= $lang === 'ta' ? 'active' : '' ?>" data-tip="Switch to Tamil">தமிழ்</a>
     </div>
   </div>
 </div>

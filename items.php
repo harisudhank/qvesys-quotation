@@ -31,24 +31,24 @@ foreach ($itemColDefs as $def) {
   ];
 }
 
-$topbarAction = '<button class="btn btn-brass" onclick="openItemModal()">+ ' . t('add', $lang) . '</button>';
+$topbarAction = '<button class="btn btn-brass" onclick="openItemModal()" data-tip="Add a new item to your rate card">+ ' . t('add', $lang) . '</button>';
 require __DIR__ . '/includes/header.php';
 ?>
 
 <div class="toolbar">
   <div class="search-box">
-    <input type="text" id="iSearch" placeholder="<?= t('search', $lang) ?>...">
+    <input type="text" id="iSearch" placeholder="<?= t('search', $lang) ?>..." data-tip="Search items by name or HSN">
   </div>
   <div class="toolbar-actions no-print">
     <div class="dropdown">
-      <button class="btn btn-outline">⬇ <?= t('export', $lang) ?> ▾</button>
+      <button class="btn btn-outline" data-tip="Export items to a file">⬇ <?= t('export', $lang) ?> ▾</button>
       <div class="dropdown-menu">
-        <a href="export.php?table=items&type=excel">📊 <?= t('export_excel', $lang) ?></a>
-        <a href="export.php?table=items&type=word">📝 <?= t('export_word', $lang) ?></a>
-        <a href="export.php?table=items&type=pdf">📄 <?= t('export_pdf', $lang) ?></a>
+        <a href="export.php?table=items&type=excel" data-tip="Download as Excel (.xlsx)">📊 <?= t('export_excel', $lang) ?></a>
+        <a href="export.php?table=items&type=word" data-tip="Download as Word (.docx)">📝 <?= t('export_word', $lang) ?></a>
+        <a href="export.php?table=items&type=pdf" data-tip="Download as PDF">📄 <?= t('export_pdf', $lang) ?></a>
       </div>
     </div>
-    <button class="btn btn-outline" onclick="openImportModal('items')">⬆ <?= t('import', $lang) ?></button>
+    <button class="btn btn-outline" onclick="openImportModal('items')" data-tip="Import items from a CSV file">⬆ <?= t('import', $lang) ?></button>
   </div>
 </div>
 
@@ -57,7 +57,7 @@ require __DIR__ . '/includes/header.php';
     <div class="empty-state">
       <div class="glyph">◫</div>
       <div><?= t('no_records', $lang) ?></div>
-      <button class="btn btn-brass" style="margin-top:14px;" onclick="openItemModal()">+ <?= t('add', $lang) ?></button>
+      <button class="btn btn-brass" style="margin-top:14px;" onclick="openItemModal()" data-tip="Add a new item to your rate card">+ <?= t('add', $lang) ?></button>
     </div>
   <?php else: ?>
   <table class="grid" id="iTable">
@@ -80,8 +80,8 @@ require __DIR__ . '/includes/header.php';
         <?php if ($itemCols['rate']['show']): ?><td class="num"><?= format_currency((float)($it['rate'] ?? 0)) ?></td><?php endif; ?>
         <?php if ($itemCols['tax']['show']): ?><td class="num"><?= h((string)($it['tax_percent'] ?? 0)) ?>%</td><?php endif; ?>
         <td>
-          <button class="btn btn-outline btn-sm" onclick='openItemModal(<?= json_encode($it, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'><?= t('edit', $lang) ?></button>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem('<?= h($it['id']) ?>')"><?= t('delete', $lang) ?></button>
+          <button class="btn btn-outline btn-sm" onclick='openItemModal(<?= json_encode($it, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' data-tip="Edit this item"><?= t('edit', $lang) ?></button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('<?= h($it['id']) ?>')" data-tip="Delete this item"><?= t('delete', $lang) ?></button>
         </td>
       </tr>
     <?php endforeach; ?>
@@ -95,7 +95,7 @@ require __DIR__ . '/includes/header.php';
   <div class="modal">
     <div class="modal-head">
       <h3 id="itemModalTitle"><?= t('add', $lang) ?></h3>
-      <button class="modal-close" onclick="closeModal('itemModal')">&times;</button>
+      <button class="modal-close" onclick="closeModal('itemModal')" data-tip="Close">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="i_id">
@@ -135,8 +135,8 @@ require __DIR__ . '/includes/header.php';
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeModal('itemModal')"><?= t('cancel', $lang) ?></button>
-      <button class="btn btn-primary" onclick="saveItem()"><?= t('save', $lang) ?></button>
+      <button class="btn btn-outline" onclick="closeModal('itemModal')" data-tip="Discard changes and close"><?= t('cancel', $lang) ?></button>
+      <button class="btn btn-primary" onclick="saveItem()" data-tip="Save the item details"><?= t('save', $lang) ?></button>
     </div>
   </div>
 </div>
@@ -146,7 +146,7 @@ require __DIR__ . '/includes/header.php';
   <div class="modal">
     <div class="modal-head">
       <h3><?= t('import', $lang) ?></h3>
-      <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+      <button class="modal-close" onclick="closeModal('importModal')" data-tip="Close">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="importType">
@@ -156,13 +156,13 @@ require __DIR__ . '/includes/header.php';
       </div>
       <p class="hint"><?= t('import_hint', $lang) ?></p>
       <div class="import-file-row">
-        <input type="file" id="importFile" accept=".csv,text/csv">
-        <a id="importDownload" class="btn btn-outline btn-sm" href="export.php?table=items&type=excel&sample=1" download>⤓ <?= t('download_sample', $lang) ?></a>
+        <input type="file" id="importFile" accept=".csv,text/csv" data-tip="Choose a CSV file to import">
+        <a id="importDownload" class="btn btn-outline btn-sm" href="export.php?table=items&type=excel&sample=1" download data-tip="Download a sample template file">⤓ <?= t('download_sample', $lang) ?></a>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeModal('importModal')"><?= t('cancel', $lang) ?></button>
-      <button class="btn btn-primary" onclick="submitImport(document.getElementById('importType').value, 'importFile')"><?= t('import', $lang) ?></button>
+      <button class="btn btn-outline" onclick="closeModal('importModal')" data-tip="Discard and close"><?= t('cancel', $lang) ?></button>
+      <button class="btn btn-primary" onclick="submitImport(document.getElementById('importType').value, 'importFile')" data-tip="Start importing the chosen file"><?= t('import', $lang) ?></button>
     </div>
   </div>
 </div>

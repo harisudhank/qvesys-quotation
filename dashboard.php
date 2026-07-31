@@ -19,7 +19,7 @@ $pending = count(array_filter($quotations, fn($q) => in_array($q['status'] ?? ''
 
 $recent = array_slice($quotations, 0, 8);
 
-$topbarAction = '<div style="display:flex; gap:8px;"><a href="quotation-editor.php" class="btn btn-brass">+ ' . t('new_quotation', $lang) . '</a><a href="quotation-editor.php?comparative=1" class="btn btn-brass">+ ' . t('comparative_quotation', $lang) . '</a></div>';
+$topbarAction = '<div style="display:flex; gap:8px;"><a href="quotation-editor.php" class="btn btn-brass" data-tip="Create a new quotation">+ ' . t('new_quotation', $lang) . '</a><a href="quotation-editor.php?comparative=1" class="btn btn-brass" data-tip="Create a comparative quotation across multiple companies">+ ' . t('comparative_quotation', $lang) . '</a></div>';
 
 require __DIR__ . '/includes/header.php';
 ?>
@@ -46,15 +46,15 @@ require __DIR__ . '/includes/header.php';
 <div class="card">
   <div class="card-head">
     <h3><?= t('recent_quotations', $lang) ?></h3>
-    <a href="quotations.php" class="btn btn-outline btn-sm"><?= t('view', $lang) ?> <?= t('quotations', $lang) ?></a>
+    <a href="quotations.php" class="btn btn-outline btn-sm" data-tip="View all quotations"><?= t('view', $lang) ?> <?= t('quotations', $lang) ?></a>
   </div>
   <?php if (empty($recent)): ?>
     <div class="empty-state">
       <div class="glyph">▦</div>
       <div><?= t('no_records', $lang) ?></div>
       <div style="display:flex; gap:8px; justify-content:center; margin-top:14px;">
-        <a href="quotation-editor.php" class="btn btn-brass">+ <?= t('new_quotation', $lang) ?></a>
-        <a href="quotation-editor.php?comparative=1" class="btn btn-brass">+ <?= t('comparative_quotation', $lang) ?></a>
+        <a href="quotation-editor.php" class="btn btn-brass" data-tip="Create a new quotation">+ <?= t('new_quotation', $lang) ?></a>
+        <a href="quotation-editor.php?comparative=1" class="btn btn-brass" data-tip="Create a comparative quotation across multiple companies">+ <?= t('comparative_quotation', $lang) ?></a>
       </div>
     </div>
   <?php else: ?>
@@ -76,13 +76,13 @@ require __DIR__ . '/includes/header.php';
         <td>
           <?php if (!empty($q['is_comparative'])): ?>
             <details style="cursor:pointer;">
-              <summary style="font-weight:600; outline:none; list-style:none; display:flex; align-items:center; gap:4px; user-select:none;">
+              <summary style="font-weight:600; outline:none; list-style:none; display:flex; align-items:center; gap:4px; user-select:none;" data-tip="Expand to see per-company links">
                 <?= h($q['client_snapshot']['name'] ?? 'Comparative Quotation') ?>
                 <span style="font-size:9px; color:#888;">▼</span>
               </summary>
               <div style="font-size:11px; margin-top:4px; padding-left:8px; border-left:2px solid var(--border-color); display:flex; flex-direction:column; gap:3px;">
                 <?php foreach (array_keys($q['options'] ?? []) as $comp): ?>
-                  <a href="quotation-view.php?id=<?= h($q['id']) ?>&company=<?= urlencode($comp) ?>" style="color:var(--primary-color); font-weight:600; text-decoration:none;">• <?= h($comp) ?></a>
+                  <a href="quotation-view.php?id=<?= h($q['id']) ?>&company=<?= urlencode($comp) ?>" style="color:var(--primary-color); font-weight:600; text-decoration:none;" data-tip="Open <?= h($comp) ?> view">• <?= h($comp) ?></a>
                 <?php endforeach; ?>
               </div>
             </details>
@@ -94,8 +94,8 @@ require __DIR__ . '/includes/header.php';
         <td class="num"><?= format_currency((float)($q['total'] ?? 0)) ?></td>
         <td><span class="badge <?= status_badge_class($q['status'] ?? 'draft') ?>"><?= t($q['status'] ?? 'draft', $lang) ?></span></td>
         <td>
-          <a href="quotation-view.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm"><?= t('view', $lang) ?></a>
-          <a href="quotation-editor.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm"><?= t('edit', $lang) ?></a>
+          <a href="quotation-view.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm" data-tip="Open this quotation"><?= t('view', $lang) ?></a>
+          <a href="quotation-editor.php?id=<?= h($q['id']) ?>" class="btn btn-outline btn-sm" data-tip="Edit this quotation"><?= t('edit', $lang) ?></a>
         </td>
       </tr>
     <?php endforeach; ?>
