@@ -337,13 +337,13 @@
             "customize_premium_footer_enabled": 1,
             "customize_premium_bank_enabled": 1,
             "customize_premium_header_title": "",
-            "customize_premium_subject": "",
-            "customize_premium_salutation": "",
-            "customize_premium_body_text": "",
+            "customize_premium_subject": "Quotation for Supply of Goods and Services",
+            "customize_premium_salutation": "Dear Sir / Madam,",
+            "customize_premium_body_text": "We are pleased to submit our quotation for the above mentioned requirements as follows:\n\nPlease find below our detailed quotation.",
             "customize_premium_footer_content": "",
             "customize_premium_company_name": "",
             "customize_premium_company_tagline": "",
-            "customize_premium_company_address": "Chaathiram Karuppur,poombuhar Salai, Main Road, Kumbakonamசத்திரம் கருப்பூர், பூம்புகார் சாலை",
+            "customize_premium_company_address": "",
             "customize_premium_company_phone": "",
             "customize_premium_company_email": "",
             "customize_premium_company_website": "",
@@ -385,10 +385,10 @@
             "customize_premium_watermark_opacity": "0.07",
             "customize_premium_watermark_size": "60px",
             "customize_premium_qr_code_enabled": 1,
-            "customize_premium_logo_width": "",
-            "customize_premium_logo_left": "",
-            "customize_premium_logo_top": "",
-            "customize_premium_element_positions": ""
+            "customize_premium_logo_width": "110px",
+            "customize_premium_logo_left": "0px",
+            "customize_premium_logo_top": "0px",
+            "customize_premium_element_positions": "{\"company-name\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"party-to\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"body-text\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"items-table\":{\"w\":\"\",\"h\":\"\",\"l\":\"0px\",\"t\":\"0px\",\"display\":true},\"qr-code\":{\"w\":\"\",\"h\":\"\",\"l\":\"-19px\",\"t\":\"2px\",\"display\":true},\"totals\":{\"w\":\"707px\",\"h\":\"122px\",\"l\":\"-29px\",\"t\":\"-4px\",\"display\":true,\"fs\":\"12.423px\"},\"company-meta\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"subject\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"terms\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"bank\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"signatory\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"doctype\":{\"w\":\"227px\",\"h\":\"33px\",\"l\":\"-5px\",\"t\":\"-49px\",\"display\":true,\"fs\":\"41.9988px\"},\"valid-until\":{\"w\":\"\",\"h\":\"\",\"l\":\"\",\"t\":\"\",\"display\":true},\"quotation-no\":{\"w\":\"\",\"h\":\"\",\"l\":\"-8px\",\"t\":\"32px\",\"display\":true}}"
         }
     }
 ]

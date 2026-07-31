@@ -394,6 +394,10 @@ $templateFile = __DIR__ . "/templates/quote-{$template}.php";
 .doc-element-container:hover .delete-btn { opacity: 0.5; }
 .doc-element-container.selected .delete-btn { opacity: 1; }
 .doc-element-container .delete-btn:hover { background: #c0392b; }
+.doc-parties .doc-element-container {
+  flex: 1;
+  min-width: 0;
+}
 
 .doc-letter-head {
   margin: 8px 0;

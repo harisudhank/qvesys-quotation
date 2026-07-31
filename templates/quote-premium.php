@@ -55,7 +55,7 @@ foreach ($render_groups as $groupName => $grp):
         <?php if (!empty($clientGstin)): ?><?= t('gstin', $lang) ?>: <?= h($clientGstin) ?><?php endif; ?>
       </div>
     </div>
-    <div class="doc-party">
+    <div class="doc-party" data-editable-key="company-gstin-phone">
       <div class="lbl"><?= t('gstin', $lang) ?> / <?= t('pan', $lang) ?></div>
       <div class="ln"><?= h($company['gstin']) ?><br><?= h($company['pan']) ?></div>
       <div class="lbl" style="margin-top:8px;"><?= t('phone', $lang) ?> / <?= t('email', $lang) ?></div>
